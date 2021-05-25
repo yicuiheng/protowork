@@ -4,7 +4,7 @@
             "type": "shell",
             "label": "build test",
             "command": "make",
-            "args": ["test", "-j12"],
+            "args": ["test-build", "-j12"],
             "options": {
                 "cwd": "${workspaceFolder}"
             },

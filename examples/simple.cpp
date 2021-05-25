@@ -1,6 +1,20 @@
+#include <cassert>
 #include <iostream>
-#include <hello.hpp>
+#include <protowork.hpp>
+
+namespace pw = protowork;
+
+
 
 int main() {
-    std::cout << hello("yicuiheng") << std::endl;
+    auto window = pw::window_t{pw::window_t::config_t {
+        640,
+        480,
+        "simple example window"
+    }};
+
+    while (!window.should_close()) {
+        window.update();
+        window.draw();
+    }
 }

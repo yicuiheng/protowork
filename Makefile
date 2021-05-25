@@ -52,9 +52,12 @@ debug: $(TARGET)
 release: CXXFLAGS+=$(RELEASE_CXXFLAGS)
 release: $(TARGET)
 
+.PHONY: test-build
+test-build: CXXFLAGS+=$(TEST_CXX_FLAGS)
+test-build: $(TEST_TARGET)
+
 .PHONY: test
-test: CXXFLAGS+=$(TEST_CXX_FLAGS)
-test: $(TEST_TARGET)
+test: test-build
 	$(TEST_TARGET)
 
 .PHONY: example
