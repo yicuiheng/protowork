@@ -20,20 +20,37 @@ using id_t = GLuint;
 
 namespace detail {
     id_t load_shader_program();
-
-    struct camera_t {
-        explicit camera_t();
-        void update(GLFWwindow*);
-        matrix_t projection() const;
-        matrix_t view() const;
-    private:
-        matrix_t m_view;
-        pos_t m_pos = pos_t{0, 0, 5};
-        float m_horizontal_angle = std::numbers::pi_v<float>;
-        float m_vertical_angle = 0.f;
-        double m_last_time;
-    };
 }
+
+struct input_t {
+    struct mouse_t {
+        enum button_t {
+            LEFT = 0,
+            RIGHT,
+            MIDDLE,
+            N_BUTTONS
+        };
+        enum class button_state_t {
+            RELEASED, PRESSED, PUSHED
+        };
+        double x = 0.0;
+        double y = 0.0;
+        button_state_t buttons[button_t::N_BUTTONS] = {};
+    } mouse;
+};
+
+struct camera_t {
+    explicit camera_t();
+    void update(input_t const&);
+    matrix_t projection() const;
+    matrix_t view() const;
+private:
+    void rotate_around_target(input_t::mouse_t const&); // drag with left button
+    matrix_t m_view;
+    pos_t m_origin_pos = pos_t{0, 0, 5};
+    pos_t m_target_pos = pos_t{0, 0, 0};
+    pos_t m_up = pos_t{0, 1, 0};
+};
 
 struct model_t {
     explicit model_t();
@@ -75,7 +92,9 @@ private:
     id_t m_view_matrix_id;
     id_t m_model_matrix_id;
     id_t m_light_id;
-    detail::camera_t m_camera;
+    camera_t m_camera;
+
+    input_t m_input;
 };
 
 }

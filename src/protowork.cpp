@@ -57,8 +57,31 @@ bool window_t::should_close() const {
     return false;
 }
 
+void update_input(GLFWwindow* window, input_t& input) {
+    glfwGetCursorPos(window, &input.mouse.x, &input.mouse.y);
+
+    // as innter representation:
+    //   button_t::LEFT == GLFW_MOUSE_BUTTON_LEFT
+    //   button_t::RIGHT == GLFW_MOUSE_BUTTON_RIGHT
+    //   button_t::MIDDLE == GLFW_MOUSE_BUTTON_MIDDLE
+    using button_t = input_t::mouse_t::button_t;
+    using button_state_t = input_t::mouse_t::button_state_t;
+    auto& mouse = input.mouse;
+    for (int button = button_t::LEFT; button < button_t::N_BUTTONS; button++) {
+        auto prev = mouse.buttons[button];
+        bool is_current_pressed = glfwGetMouseButton(window, button) == GLFW_PRESS;
+        if (!is_current_pressed)
+            mouse.buttons[button] = button_state_t::RELEASED;
+        else if (prev == button_state_t::RELEASED)
+            mouse.buttons[button] = button_state_t::PUSHED;
+        else
+            mouse.buttons[button] = button_state_t::PRESSED;
+    }
+}
+
 void window_t::update() {
-    m_camera.update(m_window);
+    update_input(m_window, m_input);
+    m_camera.update(m_input);
 }
 
 void window_t::draw() const {
