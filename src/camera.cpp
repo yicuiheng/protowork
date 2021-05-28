@@ -12,16 +12,15 @@ camera_t::camera_t() {
 
 static double prev_mouse_x = 0.0;
 static double prev_mouse_y = 0.0;
-static double last_time = glfwGetTime();
 
-void camera_t::rotate_around_target(input_t::mouse_t const& mouse) {
-    auto diff = m_origin_pos - m_target_pos;
-    double angle = atan2(diff.z, diff.x);
-    angle += 0.01 * (mouse.x - prev_mouse_x);
-    std::cout << angle << std::endl;
-    double len = sqrt(diff.x * diff.x + diff.z * diff.z);
-    m_origin_pos.x = m_target_pos.x + cos(angle) * len;
-    m_origin_pos.z = m_target_pos.z + sin(angle) * len;
+std::ostream& operator<<(std::ostream& os, glm::vec3 const& v) {
+    os << "(" << v[0] << ", " << v[1] << ", " << v[2] << ")";
+    return os;
+}
+
+void make_up_and_right_from_forward(glm::vec3& up, glm::vec3& right, glm::vec3 const& forward) {
+    right = glm::cross(forward, glm::vec3{0.f, 1.f, 0.f});
+    up = glm::cross(right, forward);
 }
 
 void camera_t::update(input_t const& input) {
@@ -31,16 +30,31 @@ void camera_t::update(input_t const& input) {
     auto is_left = buttons[button_t::LEFT] != button_state_t::RELEASED;
     auto is_right = buttons[button_t::RIGHT] != button_state_t::RELEASED;
     auto is_middle = buttons[button_t::MIDDLE] != button_state_t::RELEASED;
-    if (is_left && !is_right && !is_middle) {
-        this->rotate_around_target(input.mouse);
+
+    auto forward = glm::normalize(m_target_pos - m_origin_pos);
+    glm::vec3 up, right;
+    make_up_and_right_from_forward(up, right, forward);
+
+    float diff_x = input.mouse.x - prev_mouse_x;
+    float diff_y = input.mouse.y - prev_mouse_y;
+
+    if (is_left || is_middle) {
+        auto len = glm::length(m_target_pos - m_origin_pos);
+        m_origin_pos += -(diff_x * 0.1f) * right;
+        m_origin_pos += (diff_y * 0.1f) * up;
+        m_origin_pos = glm::normalize(m_origin_pos) * len;
     }
-    double current_time = glfwGetTime();
+    if (is_middle) {
+        m_origin_pos += -(diff_x * 0.1f) * right;
+        m_origin_pos += (diff_y * 0.1f) * up;
+        m_target_pos += -(diff_x * 0.1f) * right;
+        m_target_pos += (diff_y * 0.1f) * up;
+    }
 
     // TODO
 
     prev_mouse_x = input.mouse.x;
     prev_mouse_y = input.mouse.y;
-    last_time = current_time;
 }
 
 glm::mat4 camera_t::projection() const {
@@ -49,9 +63,12 @@ glm::mat4 camera_t::projection() const {
 }
 
 glm::mat4 camera_t::view() const {
+    auto forward = glm::normalize(m_target_pos - m_origin_pos);
+    glm::vec3 up, right;
+    make_up_and_right_from_forward(up, right, forward);
     return glm::lookAt(
         m_origin_pos,
         m_target_pos,
-        m_up
+        up
     );
 }

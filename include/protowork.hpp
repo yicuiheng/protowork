@@ -49,7 +49,6 @@ private:
     matrix_t m_view;
     pos_t m_origin_pos = pos_t{0, 0, 5};
     pos_t m_target_pos = pos_t{0, 0, 0};
-    pos_t m_up = pos_t{0, 1, 0};
 };
 
 struct model_t {
