@@ -13,11 +13,6 @@ camera_t::camera_t() {
 static double prev_mouse_x = 0.0;
 static double prev_mouse_y = 0.0;
 
-std::ostream& operator<<(std::ostream& os, glm::vec3 const& v) {
-    os << "(" << v[0] << ", " << v[1] << ", " << v[2] << ")";
-    return os;
-}
-
 void make_up_and_right_from_forward(glm::vec3& up, glm::vec3& right, glm::vec3 const& forward) {
     right = glm::cross(forward, glm::vec3{0.f, 1.f, 0.f});
     up = glm::cross(right, forward);
