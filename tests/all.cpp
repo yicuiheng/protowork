@@ -91,6 +91,9 @@ int main() {
 
     window.add_model(box);
 
+    auto text_hoge = std::make_shared<pw::text2d_t>(120, 120, "hogehoge");
+    window.add_text2d(text_hoge);
+
     while (!window.should_close()) {
         window.update();
         window.draw();
