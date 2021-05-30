@@ -4,7 +4,9 @@
     "C_Cpp.default.compilerPath": "/usr/bin/g++",
     "C_Cpp.default.cppStandard": "c++20",
     "C_Cpp.default.intelliSenseMode": "gcc-x64",
-    "C_Cpp.default.includePath": ["${workspaceFolder}/include"],
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/include"
+    ],
     "files.associations": {
         "ostream": "cpp",
         "array": "cpp",
@@ -73,5 +75,7 @@
         "valarray": "cpp",
         "variant": "cpp",
         "numbers": "cpp"
-    }
+    },
+    "editor.defaultFormatter": "ms-vscode.cpptools",
+    "clang-format.executable": "clang-format",
 }

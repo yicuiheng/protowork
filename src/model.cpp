@@ -20,17 +20,20 @@ model_t::~model_t() {
 }
 
 void model_t::draw() const {
-    auto const& vertex_buffer = this->vbo_vertex_buffer();
+    auto const &vertex_buffer = this->vbo_vertex_buffer();
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, m_vbo_vertex_buffer_id);
-    glBufferData(GL_ARRAY_BUFFER, vertex_buffer.size() * sizeof(pos_t), vertex_buffer.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertex_buffer.size() * sizeof(pos_t),
+                 vertex_buffer.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    auto const& index_buffer = this->vbo_index_buffer();
+    auto const &index_buffer = this->vbo_index_buffer();
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_index_buffer_id);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_buffer.size() * sizeof(index_t), index_buffer.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_buffer.size() * sizeof(index_t),
+                 index_buffer.data(), GL_STATIC_DRAW);
 
-    glDrawElements(GL_TRIANGLES, index_buffer.size(), GL_UNSIGNED_SHORT, nullptr);
+    glDrawElements(GL_TRIANGLES, index_buffer.size(), GL_UNSIGNED_SHORT,
+                   nullptr);
 
     glDisableVertexAttribArray(0);
 }

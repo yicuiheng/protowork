@@ -14,7 +14,8 @@ using namespace protowork;
 std::string get_default_font_path() {
     std::array<char, 128> buffer;
     std::string stdout;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen("fc-match -v monospace | grep file:", "r"), pclose);
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(
+        popen("fc-match -v monospace | grep file:", "r"), pclose);
     if (!pipe) {
         throw std::runtime_error("popen() failed!");
     }
@@ -33,7 +34,7 @@ std::string get_default_font_path() {
     return result;
 }
 
-static const char* vertex_shader_code = R"(
+static const char *vertex_shader_code = R"(
 #version 430 core
 
 // Input vertex data, different for all executions of this shader.
@@ -54,7 +55,7 @@ void main(){
     UV = vertexUV;
 })";
 
-static const char* fragment_shader_code = R"(
+static const char *fragment_shader_code = R"(
 #version 430 core
 
 in vec2 UV;
@@ -78,7 +79,8 @@ static FT_Face g_face;
 static int g_font_size = 32;
 
 void font_manager_t::initialize() {
-    g_shader_id = detail::load_shader_program(vertex_shader_code, fragment_shader_code);
+    g_shader_id =
+        detail::load_shader_program(vertex_shader_code, fragment_shader_code);
 
     auto error = FT_Init_FreeType(&g_library);
     if (error) {
@@ -88,7 +90,8 @@ void font_manager_t::initialize() {
     auto font_path = get_default_font_path();
     error = FT_New_Face(g_library, font_path.c_str(), 0, &g_face);
     if (error == FT_Err_Unknown_File_Format) {
-        throw std::runtime_error{"freetype2 dones not support default font format: " + font_path};
+        throw std::runtime_error{
+            "freetype2 dones not support default font format: " + font_path};
     } else if (error) {
         throw std::runtime_error{"failed to load font file"};
     }
@@ -97,11 +100,12 @@ void font_manager_t::initialize() {
     // calc text texture size
     int w = 0;
     int h = 0;
-    for (int i=32; i<128; i++) {
+    for (int i = 32; i < 128; i++) {
         if (FT_Load_Char(g_face, i, FT_LOAD_RENDER)) {
-            throw std::runtime_error{"failed to load charactor: " + std::string{(char)i}};
+            throw std::runtime_error{"failed to load charactor: " +
+                                     std::string{(char)i}};
         }
-        auto const& bitmap = g_face->glyph->bitmap;
+        auto const &bitmap = g_face->glyph->bitmap;
         w += bitmap.width;
         h = std::max(h, (int)bitmap.rows);
     }
@@ -112,26 +116,29 @@ void font_manager_t::initialize() {
     glGenTextures(1, &g_texture_id);
     glBindTexture(GL_TEXTURE_2D, g_texture_id);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
     // write font glyph bitmap to texture
     int x = 0;
-    for (int i=32; i<128; i++) {
+    for (int i = 32; i < 128; i++) {
         if (FT_Load_Char(g_face, i, FT_LOAD_RENDER))
             continue;
         auto glyph = g_face->glyph;
         int glyph_w = glyph->bitmap.width;
         int glyph_h = glyph->bitmap.rows;
         std::vector<GLubyte> buf(glyph_w * glyph_h * 4);
-        for (int i=0; i<glyph_h * glyph_w; i++) {
-            buf[i*4+0] = glyph->bitmap.buffer[i];
-            buf[i*4+1] = glyph->bitmap.buffer[i];
-            buf[i*4+2] = glyph->bitmap.buffer[i];
-            buf[i*4+3] = glyph->bitmap.buffer[i];
+        for (int i = 0; i < glyph_h * glyph_w; i++) {
+            buf[i * 4 + 0] = glyph->bitmap.buffer[i];
+            buf[i * 4 + 1] = glyph->bitmap.buffer[i];
+            buf[i * 4 + 2] = glyph->bitmap.buffer[i];
+            buf[i * 4 + 3] = glyph->bitmap.buffer[i];
         }
-        glTextureSubImage2D(g_texture_id, 0, x, 0, glyph->bitmap.width, glyph->bitmap.rows, GL_RGBA, GL_UNSIGNED_BYTE, buf.data());
+        glTextureSubImage2D(g_texture_id, 0, x, 0, glyph->bitmap.width,
+                            glyph->bitmap.rows, GL_RGBA, GL_UNSIGNED_BYTE,
+                            buf.data());
 
         g_char_infos[i].advance_x = glyph->advance.x >> 6;
         g_char_infos[i].width = glyph->bitmap.width;
@@ -150,27 +157,20 @@ void font_manager_t::finalize() {
     glDeleteProgram(g_shader_id);
 }
 
-font_manager_t::char_info_t const& font_manager_t::char_info(char c) {
+font_manager_t::char_info_t const &font_manager_t::char_info(char c) {
     return g_char_infos[c];
 }
 
-GLuint font_manager_t::shader_id() {
-    return g_shader_id;
-}
+GLuint font_manager_t::shader_id() { return g_shader_id; }
 
-GLuint font_manager_t::texture_id() {
-    return g_texture_id;
-}
+GLuint font_manager_t::texture_id() { return g_texture_id; }
 
 GLuint font_manager_t::texture_sampler_id() {
-    g_texture_sampler_id = glGetUniformLocation(g_shader_id, "myTextureSampler");
+    g_texture_sampler_id =
+        glGetUniformLocation(g_shader_id, "myTextureSampler");
     return g_texture_sampler_id;
 }
 
-int font_manager_t::atlas_width() {
-    return g_atlas_width;
-}
+int font_manager_t::atlas_width() { return g_atlas_width; }
 
-int font_manager_t::atlas_height() {
-    return g_atlas_height;
-}
+int font_manager_t::atlas_height() { return g_atlas_height; }

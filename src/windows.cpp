@@ -1,10 +1,10 @@
-#include <stdexcept>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <stdexcept>
 
 #include <protowork.hpp>
 
-static const char* vertex_shader_code = R"(
+static const char *vertex_shader_code = R"(
 #version 430 core
 
 layout(location = 0) in vec3 vertexPosition_modelspace;
@@ -37,7 +37,7 @@ void main(){
     Coord = vertexCoord;
 })";
 
-static const char* fragment_shader_code = R"(
+static const char *fragment_shader_code = R"(
 #version 430 core
 
 in vec3 Position_worldspace;
@@ -81,7 +81,7 @@ void main()
 
 using namespace protowork;
 
-window_t::window_t(config_t const& config) {
+window_t::window_t(config_t const &config) {
     if (!glfwInit())
         throw std::runtime_error{"Failed to initialize GLFW"};
 
@@ -89,7 +89,8 @@ window_t::window_t(config_t const& config) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    m_window = glfwCreateWindow(config.width, config.height, config.title, nullptr, nullptr);
+    m_window = glfwCreateWindow(config.width, config.height, config.title,
+                                nullptr, nullptr);
     if (m_window == nullptr) {
         glfwTerminate();
         throw std::runtime_error{"Failed to open GLFW window"};
@@ -105,7 +106,7 @@ window_t::window_t(config_t const& config) {
 
     // Set the mouse at the center of the screen
     glfwPollEvents();
-    glfwSetCursorPos(m_window, config.width/2, config.height/2);
+    glfwSetCursorPos(m_window, config.width / 2, config.height / 2);
 
     glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
@@ -114,7 +115,8 @@ window_t::window_t(config_t const& config) {
     glDisable(GL_CULL_FACE);
     glPointSize(10.0f);
 
-    m_shader_id = detail::load_shader_program(vertex_shader_code, fragment_shader_code);
+    m_shader_id =
+        detail::load_shader_program(vertex_shader_code, fragment_shader_code);
 
     m_mvp_matrix_id = glGetUniformLocation(m_shader_id, "MVP");
     m_view_matrix_id = glGetUniformLocation(m_shader_id, "V");
@@ -136,7 +138,7 @@ bool window_t::should_close() const {
     return false;
 }
 
-void update_input(GLFWwindow* window, input_t& input) {
+void update_input(GLFWwindow *window, input_t &input) {
     glfwGetCursorPos(window, &input.mouse.x, &input.mouse.y);
 
     // as innter representation:
@@ -145,10 +147,11 @@ void update_input(GLFWwindow* window, input_t& input) {
     //   button_t::MIDDLE == GLFW_MOUSE_BUTTON_MIDDLE
     using button_t = input_t::mouse_t::button_t;
     using button_state_t = input_t::mouse_t::button_state_t;
-    auto& mouse = input.mouse;
+    auto &mouse = input.mouse;
     for (int button = button_t::LEFT; button < button_t::N_BUTTONS; button++) {
         auto prev = mouse.buttons[button];
-        bool is_current_pressed = glfwGetMouseButton(window, button) == GLFW_PRESS;
+        bool is_current_pressed =
+            glfwGetMouseButton(window, button) == GLFW_PRESS;
         if (!is_current_pressed)
             mouse.buttons[button] = button_state_t::RELEASED;
         else if (prev == button_state_t::RELEASED)
@@ -177,16 +180,16 @@ void window_t::draw() const {
     glUniformMatrix4fv(m_model_matrix_id, 1, GL_FALSE, &model_matrix[0][0]);
     glUniformMatrix4fv(m_view_matrix_id, 1, GL_FALSE, &view_matrix[0][0]);
 
-    glm::vec3 lightPos = glm::vec3(4.0f,4.0f,-1.0f);
+    glm::vec3 lightPos = glm::vec3(4.0f, 4.0f, -1.0f);
     glUniform3f(m_light_id, lightPos.x, lightPos.y, lightPos.z);
 
-    for (auto const& model : m_models) {
+    for (auto const &model : m_models) {
         model->draw();
     }
 
     glUseProgram(font_manager_t::shader_id());
 
-    for (auto const& text2d : m_text2ds) {
+    for (auto const &text2d : m_text2ds) {
         text2d->draw_impl();
     }
 
