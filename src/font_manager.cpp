@@ -4,9 +4,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
-
 #include <protowork.hpp>
 
 using namespace protowork;
@@ -49,7 +46,7 @@ void main(){
     // map [0..800][0..600] to [-1..1][-1..1]
     vec2 vertexPosition_homoneneousspace = vertexPosition_screenspace - vec2(400,300); // [0..800][0..600] -> [-400..400][-300..300]
     vertexPosition_homoneneousspace /= vec2(400,300);
-    gl_Position =  vec4(vertexPosition_homoneneousspace,0,1);
+    gl_Position = vec4(vertexPosition_homoneneousspace,0,1);
 
     // UV of the vertex. No special space for this one.
     UV = vertexUV;
@@ -69,19 +66,20 @@ void main() {
     // color = vec4(1);
 })";
 
+static GLuint g_vertex_array_id;
+static GLuint g_vertex_buffer_id;
+static GLuint g_uv_buffer_id;
 static GLuint g_shader_id;
 static GLuint g_texture_id;
 static GLuint g_texture_sampler_id;
+
 static int g_atlas_width, g_atlas_height;
 static font_manager_t::char_info_t g_char_infos[128];
 static FT_Library g_library;
 static FT_Face g_face;
-static int g_font_size = 32;
+static int g_font_size = 42;
 
 void font_manager_t::initialize() {
-    g_shader_id =
-        detail::load_shader_program(vertex_shader_code, fragment_shader_code);
-
     auto error = FT_Init_FreeType(&g_library);
     if (error) {
         throw std::runtime_error{"failed to initialize freetype2"};
@@ -150,14 +148,106 @@ void font_manager_t::initialize() {
 
         x += glyph->bitmap.width;
     }
+
+    glGenVertexArrays(1, &g_vertex_array_id);
+    glBindVertexArray(g_vertex_array_id);
+
+    glGenBuffers(1, &g_vertex_buffer_id);
+    glGenBuffers(1, &g_uv_buffer_id);
+
+    g_shader_id =
+        detail::load_shader_program(vertex_shader_code, fragment_shader_code);
+    g_texture_sampler_id =
+        glGetUniformLocation(g_shader_id, "myTextureSampler");
+}
+
+void protowork::print_text_2d(int x, int y, std::string const &text) {
+    std::vector<glm::vec2> vertices;
+    std::vector<glm::vec2> UVs;
+    for (unsigned int i = 0; i < text.size(); i++) {
+        int c = text[i];
+        glm::vec2 vertex_up_left = glm::vec2(x, y);
+        glm::vec2 vertex_up_right = glm::vec2(x + g_font_size, y);
+        glm::vec2 vertex_down_right =
+            glm::vec2(x + g_font_size, y + g_font_size);
+        glm::vec2 vertex_down_left = glm::vec2(x, y + g_font_size);
+
+        vertices.push_back(vertex_up_left);
+        vertices.push_back(vertex_down_left);
+        vertices.push_back(vertex_up_right);
+
+        vertices.push_back(vertex_down_right);
+        vertices.push_back(vertex_up_right);
+        vertices.push_back(vertex_down_left);
+
+        float uv_x = (float)g_char_infos[c].texture_x / g_atlas_width;
+        float uv_y =
+            (float)(g_char_infos[c].texture_y + g_char_infos[c].height) /
+            g_atlas_height;
+        float uv_width = (float)g_char_infos[c].width / g_atlas_width;
+        float uv_height =
+            (float)(g_char_infos[c].texture_y + g_char_infos[c].height) /
+            g_atlas_height;
+
+        x += g_font_size;
+
+        glm::vec2 uv_up_left = glm::vec2(uv_x, uv_height);
+        glm::vec2 uv_up_right = glm::vec2(uv_x + uv_width, uv_height);
+        glm::vec2 uv_down_right = glm::vec2(uv_x + uv_width, 0.f);
+        glm::vec2 uv_down_left = glm::vec2(uv_x, 0.f);
+
+        UVs.push_back(uv_up_left);
+        UVs.push_back(uv_down_left);
+        UVs.push_back(uv_up_right);
+
+        UVs.push_back(uv_down_right);
+        UVs.push_back(uv_up_right);
+        UVs.push_back(uv_down_left);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, g_vertex_buffer_id);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec2),
+                 &vertices[0], GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, g_uv_buffer_id);
+    glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs[0],
+                 GL_STATIC_DRAW);
+
+    // Bind shader
+    glUseProgram(g_shader_id);
+
+    // Bind texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, g_texture_id);
+    // Set our "myTextureSampler" sampler to use Texture Unit 0
+    glUniform1i(g_texture_sampler_id, 0);
+
+    // 1rst attribute buffer : vertices
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, g_vertex_buffer_id);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
+
+    // 2nd attribute buffer : UVs
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, g_uv_buffer_id);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // Draw call
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
 }
 
 void font_manager_t::finalize() {
+    glDeleteBuffers(1, &g_vertex_array_id);
+    glDeleteBuffers(1, &g_vertex_buffer_id);
+    glDeleteBuffers(1, &g_uv_buffer_id);
     glDeleteTextures(1, &g_texture_id);
     glDeleteProgram(g_shader_id);
 }
 
-font_manager_t::char_info_t const &font_manager_t::char_info(char c) {
+font_manager_t::char_info_t const &font_manager_t::char_info(int c) {
     return g_char_infos[c];
 }
 
@@ -165,11 +255,7 @@ GLuint font_manager_t::shader_id() { return g_shader_id; }
 
 GLuint font_manager_t::texture_id() { return g_texture_id; }
 
-GLuint font_manager_t::texture_sampler_id() {
-    g_texture_sampler_id =
-        glGetUniformLocation(g_shader_id, "myTextureSampler");
-    return g_texture_sampler_id;
-}
+GLuint font_manager_t::texture_sampler_id() { return g_texture_sampler_id; }
 
 int font_manager_t::atlas_width() { return g_atlas_width; }
 

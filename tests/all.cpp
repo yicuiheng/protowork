@@ -68,7 +68,7 @@ struct box_object_t : public pw::model_t {
         m_indices.push_back(2);
     }
 
-  protected:
+protected:
     std::vector<pw::pos_t> const &vbo_vertex_buffer() const override {
         return m_vertices;
     }
@@ -76,7 +76,7 @@ struct box_object_t : public pw::model_t {
         return m_indices;
     }
 
-  private:
+private:
     std::vector<pw::pos_t> m_vertices;
     std::vector<pw::index_t> m_indices;
 };
@@ -89,11 +89,11 @@ int main() {
 
     window.add_model(box);
 
-    auto text_hoge = std::make_shared<pw::text2d_t>(120, 120, "hogehoge");
-    window.add_text2d(text_hoge);
-
     while (!window.should_close()) {
         window.update();
+
+        pw::print_text_2d(120, 120, "hogehoge");
+
         window.draw();
     }
 }

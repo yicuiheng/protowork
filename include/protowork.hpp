@@ -74,7 +74,7 @@ struct font_manager_t {
     static void initialize();
     static void finalize();
 
-    static char_info_t const &char_info(char);
+    static char_info_t const &char_info(int);
     static GLuint shader_id();
     static GLuint texture_id();
     static GLuint texture_sampler_id();
@@ -82,20 +82,7 @@ struct font_manager_t {
     static int atlas_height();
 };
 
-struct text2d_t {
-    explicit text2d_t(int left, int top, std::string const &str);
-    void draw_impl() const;
-    virtual ~text2d_t();
-
-private:
-    std::string m_text;
-    std::vector<glm::vec2> m_vertices;
-    std::vector<glm::vec2> m_uvs;
-    GLuint m_vertex_array_id;
-    GLuint m_vertex_buffer_id;
-    GLuint m_uv_buffer_id;
-    GLuint m_index_buffer_id;
-};
+void print_text_2d(int x, int y, std::string const &str);
 
 struct window_t {
     struct config_t {
@@ -109,10 +96,6 @@ struct window_t {
     void add_model(std::shared_ptr<model_t> const &model) {
         m_models.push_back(model);
     }
-    void add_text2d(std::shared_ptr<text2d_t> const &text) {
-        m_text2ds.push_back(text);
-    }
-    void render_text(text2d_t const &);
 
     void update();
     void draw() const;
@@ -122,7 +105,6 @@ struct window_t {
 private:
     GLFWwindow *m_window = nullptr;
     std::vector<std::shared_ptr<model_t>> m_models;
-    std::vector<std::shared_ptr<text2d_t>> m_text2ds;
 
     id_t m_shader_id;
     id_t m_mvp_matrix_id;

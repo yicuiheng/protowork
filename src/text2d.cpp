@@ -8,8 +8,23 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <protowork.hpp>
+/*
 
 using namespace protowork;
+
+struct text2d_t {
+    explicit text2d_t(int left, int top, std::string const &str);
+    void draw_impl() const;
+    virtual ~text2d_t();
+
+private:
+    std::string m_text;
+    std::vector<glm::vec2> m_vertices;
+    std::vector<glm::vec2> m_uvs;
+
+    GLuint m_index_buffer_id;
+};
+
 
 text2d_t::text2d_t(int left, int top, std::string const &str) : m_text{str} {
     glGenVertexArrays(1, &m_vertex_array_id);
@@ -87,9 +102,7 @@ void text2d_t::draw_impl() const {
     glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, m_uv_buffer_id);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    /*
-      glEnable(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); */
+
     glDrawArrays(GL_TRIANGLES, 0, m_vertices.size() / 2);
 
     // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer_id);
@@ -105,3 +118,4 @@ text2d_t::~text2d_t() {
     glDeleteBuffers(1, &m_uv_buffer_id);
     // glDeleteBuffers(1, &m_index_buffer_id);
 }
+*/
