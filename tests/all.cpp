@@ -83,17 +83,16 @@ private:
 
 int main() {
     auto window =
-        pw::window_t{pw::window_t::config_t{640, 480, "all test window"}};
+        pw::window_t{pw::window_t::config_t{800, 600, "all test window"}};
 
     auto box = std::make_shared<box_object_t>();
-
     window.add_model(box);
+
+    auto text_neko = std::make_shared<pw::text2d_t>(120, 120, "neko");
+    window.add_text_2d(text_neko);
 
     while (!window.should_close()) {
         window.update();
-
-        pw::print_text_2d(120, 120, "hogehoge");
-
         window.draw();
     }
 }

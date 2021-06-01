@@ -186,8 +186,11 @@ void window_t::draw() const {
     for (auto const &model : m_models) {
         model->draw();
     }
-    print_text_2d(120, 120, "neko");
-    print_text_2d(0, 0, "neko");
+
+    glUseProgram(font_manager_t::shader_id());
+    for (auto const &text : m_text_2ds) {
+        text->draw();
+    }
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();

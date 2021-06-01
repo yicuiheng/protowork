@@ -161,84 +161,6 @@ void font_manager_t::initialize() {
         glGetUniformLocation(g_shader_id, "myTextureSampler");
 }
 
-void protowork::print_text_2d(int x, int y, std::string const &text) {
-    std::vector<glm::vec2> vertices;
-    std::vector<glm::vec2> UVs;
-    for (unsigned int i = 0; i < text.size(); i++) {
-        int c = text[i];
-        glm::vec2 vertex_up_left = glm::vec2(x, y);
-        glm::vec2 vertex_up_right = glm::vec2(x + g_font_size, y);
-        glm::vec2 vertex_down_right =
-            glm::vec2(x + g_font_size, y + g_font_size);
-        glm::vec2 vertex_down_left = glm::vec2(x, y + g_font_size);
-
-        vertices.push_back(vertex_up_left);
-        vertices.push_back(vertex_down_left);
-        vertices.push_back(vertex_up_right);
-
-        vertices.push_back(vertex_down_right);
-        vertices.push_back(vertex_up_right);
-        vertices.push_back(vertex_down_left);
-
-        float uv_x = (float)g_char_infos[c].texture_x / g_atlas_width;
-        float uv_y =
-            (float)(g_char_infos[c].texture_y + g_char_infos[c].height) /
-            g_atlas_height;
-        float uv_width = (float)g_char_infos[c].width / g_atlas_width;
-        float uv_height =
-            (float)(g_char_infos[c].texture_y + g_char_infos[c].height) /
-            g_atlas_height;
-
-        x += g_font_size;
-
-        glm::vec2 uv_up_left = glm::vec2(uv_x, uv_height);
-        glm::vec2 uv_up_right = glm::vec2(uv_x + uv_width, uv_height);
-        glm::vec2 uv_down_right = glm::vec2(uv_x + uv_width, 0.f);
-        glm::vec2 uv_down_left = glm::vec2(uv_x, 0.f);
-
-        UVs.push_back(uv_up_left);
-        UVs.push_back(uv_down_left);
-        UVs.push_back(uv_up_right);
-
-        UVs.push_back(uv_down_right);
-        UVs.push_back(uv_up_right);
-        UVs.push_back(uv_down_left);
-    }
-    glBindBuffer(GL_ARRAY_BUFFER, g_vertex_buffer_id);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec2),
-                 &vertices[0], GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, g_uv_buffer_id);
-    glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs[0],
-                 GL_STATIC_DRAW);
-
-    // Bind shader
-    glUseProgram(g_shader_id);
-
-    // Bind texture
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, g_texture_id);
-    // Set our "myTextureSampler" sampler to use Texture Unit 0
-    glUniform1i(g_texture_sampler_id, 0);
-
-    // 1rst attribute buffer : vertices
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, g_vertex_buffer_id);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
-
-    // 2nd attribute buffer : UVs
-    glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, g_uv_buffer_id);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *)0);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // Draw call
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-
-    glDisableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
-}
-
 void font_manager_t::finalize() {
     glDeleteBuffers(1, &g_vertex_array_id);
     glDeleteBuffers(1, &g_vertex_buffer_id);
@@ -256,6 +178,10 @@ GLuint font_manager_t::shader_id() { return g_shader_id; }
 GLuint font_manager_t::texture_id() { return g_texture_id; }
 
 GLuint font_manager_t::texture_sampler_id() { return g_texture_sampler_id; }
+
+GLuint font_manager_t::vertex_buffer_id() { return g_vertex_buffer_id; }
+
+GLuint font_manager_t::uv_buffer_id() { return g_uv_buffer_id; }
 
 int font_manager_t::atlas_width() { return g_atlas_width; }
 
