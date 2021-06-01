@@ -1,13 +1,12 @@
 #ifndef PROTOWORK_HPP
 #define PROTOWORK_HPP
 
-#include <GL/glew.h>
-
-#include <cstddef>
-#include <glm/glm.hpp>
 #include <memory>
-#include <numbers>
+#include <unordered_map>
 #include <vector>
+
+#include <GL/glew.h>
+#include <glm/glm.hpp>
 
 struct GLFWwindow;
 
@@ -61,36 +60,50 @@ private:
     id_t m_vbo_vertex_buffer_id;
     id_t m_vbo_index_buffer_id;
 };
-struct font_manager_t {
-    struct char_info_t {
-        int advance_x;
-        int width;
-        int height;
-        int bearing_x;
-        int bearing_y;
-        int texture_x;
-        int texture_y;
-    };
-    static void initialize();
-    static void finalize();
 
-    static char_info_t const &char_info(int);
-    static GLuint shader_id();
-    static GLuint texture_id();
-    static GLuint texture_sampler_id();
-    static GLuint vertex_buffer_id();
-    static GLuint uv_buffer_id();
-    static int atlas_width();
-    static int atlas_height();
+namespace font {
+
+struct key_t {
+    int font_size;
 };
 
+bool operator==(key_t const &, key_t const &);
+
+struct char_info_t {
+    int advance_x;
+    int width;
+    int height;
+    int bearing_x;
+    int bearing_y;
+    int texture_x;
+    int texture_y;
+};
+
+struct data_t {
+    std::unordered_map<int, char_info_t> char_infos;
+    GLuint texture_id;
+    int atlas_width;
+    int atlas_height;
+};
+
+void initialize();
+void finalize();
+
+data_t const &get(key_t const &);
+
+GLuint shader_id();
+GLuint texture_sampler_id();
+
+} // namespace font
+
 struct text2d_t {
-    explicit text2d_t(int x, int y, std::string const &str);
+    explicit text2d_t(int x, int y, int font_size, std::string const &str);
     void draw() const;
     virtual ~text2d_t();
 
 private:
     int m_x, m_y;
+    int m_font_size;
     std::string m_text;
     std::vector<glm::vec2> m_vertices;
     std::vector<glm::vec2> m_uvs;

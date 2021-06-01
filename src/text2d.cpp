@@ -11,14 +11,14 @@
 
 using namespace protowork;
 
-text2d_t::text2d_t(int x, int y, std::string const &str)
-    : m_x{x}, m_y{y}, m_text{str} {
-    int font_size = 32;
-    int atlas_width = font_manager_t::atlas_width();
-    int atlas_height = font_manager_t::atlas_height();
+text2d_t::text2d_t(int x, int y, int font_size, std::string const &str)
+    : m_x{x}, m_y{y}, m_font_size{font_size}, m_text{str} {
+    auto const &font_data = font::get(font::key_t{font_size});
+    int atlas_width = font_data.atlas_width;
+    int atlas_height = font_data.atlas_height;
     for (unsigned int i = 0; i < m_text.size(); i++) {
         int c = m_text[i];
-        auto const &info = font_manager_t::char_info(c);
+        auto const &info = font_data.char_infos.at(c);
         glm::vec2 vertex_up_left = glm::vec2(x, y);
         glm::vec2 vertex_up_right = glm::vec2(x + font_size, y);
         glm::vec2 vertex_down_right = glm::vec2(x + font_size, y + font_size);
@@ -65,8 +65,9 @@ text2d_t::text2d_t(int x, int y, std::string const &str)
 
 void text2d_t::draw() const {
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, font_manager_t::texture_id());
-    glUniform1i(font_manager_t::texture_sampler_id(), 0);
+    glBindTexture(GL_TEXTURE_2D,
+                  font::get(font::key_t{m_font_size}).texture_id);
+    glUniform1i(font::texture_sampler_id(), 0);
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_id);

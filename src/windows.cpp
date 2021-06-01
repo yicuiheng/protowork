@@ -123,11 +123,11 @@ window_t::window_t(config_t const &config) {
     m_model_matrix_id = glGetUniformLocation(m_shader_id, "M");
     m_light_id = glGetUniformLocation(m_shader_id, "LightPosition_worldspace");
 
-    font_manager_t::initialize();
+    font::initialize();
 }
 
 window_t::~window_t() {
-    font_manager_t::finalize();
+    font::finalize();
     glDeleteProgram(m_shader_id);
     glfwTerminate();
 }
@@ -187,7 +187,7 @@ void window_t::draw() const {
         model->draw();
     }
 
-    glUseProgram(font_manager_t::shader_id());
+    glUseProgram(font::shader_id());
     for (auto const &text : m_text_2ds) {
         text->draw();
     }
