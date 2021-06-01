@@ -19,10 +19,14 @@ text2d_t::text2d_t(int x, int y, int font_size, std::string const &str)
     for (unsigned int i = 0; i < m_text.size(); i++) {
         int c = m_text[i];
         auto const &info = font_data.char_infos.at(c);
-        glm::vec2 vertex_up_left = glm::vec2(x, y);
-        glm::vec2 vertex_up_right = glm::vec2(x + font_size, y);
-        glm::vec2 vertex_down_right = glm::vec2(x + font_size, y + font_size);
-        glm::vec2 vertex_down_left = glm::vec2(x, y + font_size);
+        auto left = x + info.bearing_x;
+        auto right = left + info.width;
+        auto up = y + info.bearing_y;
+        auto down = up - info.height;
+        glm::vec2 vertex_up_left = glm::vec2(left, up);
+        glm::vec2 vertex_up_right = glm::vec2(right, up);
+        glm::vec2 vertex_down_right = glm::vec2(right, down);
+        glm::vec2 vertex_down_left = glm::vec2(left, down);
 
         m_vertices.push_back(vertex_up_left);
         m_vertices.push_back(vertex_down_left);
@@ -33,16 +37,16 @@ text2d_t::text2d_t(int x, int y, int font_size, std::string const &str)
         m_vertices.push_back(vertex_down_left);
 
         float uv_x = (float)info.texture_x / atlas_width;
-        float uv_y = (float)(info.texture_y + info.height) / atlas_height;
+        float uv_y = (float)info.texture_y / atlas_height;
         float uv_width = (float)info.width / atlas_width;
         float uv_height = (float)(info.texture_y + info.height) / atlas_height;
 
-        x += font_size;
+        x += info.advance_x;
 
-        glm::vec2 uv_up_left = glm::vec2(uv_x, uv_height);
-        glm::vec2 uv_up_right = glm::vec2(uv_x + uv_width, uv_height);
-        glm::vec2 uv_down_right = glm::vec2(uv_x + uv_width, 0.f);
-        glm::vec2 uv_down_left = glm::vec2(uv_x, 0.f);
+        glm::vec2 uv_up_left = glm::vec2(uv_x, uv_y);
+        glm::vec2 uv_up_right = glm::vec2(uv_x + uv_width, uv_y);
+        glm::vec2 uv_down_right = glm::vec2(uv_x + uv_width, uv_y + uv_height);
+        glm::vec2 uv_down_left = glm::vec2(uv_x, uv_y + uv_height);
 
         m_uvs.push_back(uv_up_left);
         m_uvs.push_back(uv_down_left);

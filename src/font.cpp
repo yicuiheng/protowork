@@ -59,10 +59,10 @@ in vec2 UV;
 
 out vec4 color;
 
-uniform sampler2D myTextureSampler;
+uniform sampler2D textureSampler;
 
 void main() {
-    color = texture(myTextureSampler, UV);
+    color = texture(textureSampler, UV);
 })";
 static GLuint g_shader_id;
 static GLuint g_texture_sampler_id;
@@ -100,8 +100,7 @@ void pw::font::initialize() {
 
     g_shader_id =
         detail::load_shader_program(vertex_shader_code, fragment_shader_code);
-    g_texture_sampler_id =
-        glGetUniformLocation(g_shader_id, "myTextureSampler");
+    g_texture_sampler_id = glGetUniformLocation(g_shader_id, "textureSampler");
 }
 
 void pw::font::finalize() {
