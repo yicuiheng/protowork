@@ -88,7 +88,7 @@ int main() {
     auto box = std::make_shared<box_object_t>();
     window.add_model(box);
 
-    auto text_neko = std::make_shared<pw::text2d_t>(120, 120, 32, "neko");
+    auto text_neko = std::make_shared<pw::text2d_t>(400, 300, 32, "neko");
     window.add_text_2d(text_neko);
 
     auto text_inu = std::make_shared<pw::text2d_t>(0, 0, 96, "inu");

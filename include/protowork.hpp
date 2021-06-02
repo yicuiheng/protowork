@@ -93,12 +93,13 @@ data_t const &get(key_t const &);
 
 GLuint shader_id();
 GLuint texture_sampler_id();
+GLuint size_id();
 
 } // namespace font
 
 struct text2d_t {
     explicit text2d_t(int x, int y, int font_size, std::string const &str);
-    void draw() const;
+    void draw(GLFWwindow *) const;
     virtual ~text2d_t();
 
 private:

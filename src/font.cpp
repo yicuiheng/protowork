@@ -35,21 +35,21 @@ static const char *vertex_shader_code = R"(
 #version 430 core
 
 // Input vertex data, different for all executions of this shader.
-layout(location = 0) in vec2 vertexPosition_screenspace;
-layout(location = 1) in vec2 vertexUV;
+layout(location = 0) in vec2 i_Position_screenspace;
+layout(location = 1) in vec2 i_UV;
 
 out vec2 UV;
 
-void main(){
+uniform vec2 u_Size;
 
-    // Output position of the vertex, in clip space
-    // map [0..800][0..600] to [-1..1][-1..1]
-    vec2 vertexPosition_homoneneousspace = vertexPosition_screenspace - vec2(400,300); // [0..800][0..600] -> [-400..400][-300..300]
-    vertexPosition_homoneneousspace /= vec2(400,300);
-    gl_Position = vec4(vertexPosition_homoneneousspace,0,1);
+void main(){
+    // map (0, 0) -> (-1, -1)
+    //     (size.x, size.y) -> (1, 1)
+    vec2 pos = 2 * i_Position_screenspace / u_Size - vec2(1, 1);
+    gl_Position = vec4(pos, 0, 1);
 
     // UV of the vertex. No special space for this one.
-    UV = vertexUV;
+    UV = i_UV;
 })";
 
 static const char *fragment_shader_code = R"(
@@ -66,6 +66,7 @@ void main() {
 })";
 static GLuint g_shader_id;
 static GLuint g_texture_sampler_id;
+static GLuint g_size_id;
 static FT_Library g_library;
 static FT_Face g_face;
 
@@ -101,6 +102,7 @@ void pw::font::initialize() {
     g_shader_id =
         detail::load_shader_program(vertex_shader_code, fragment_shader_code);
     g_texture_sampler_id = glGetUniformLocation(g_shader_id, "textureSampler");
+    g_size_id = glGetUniformLocation(g_shader_id, "u_Size");
 }
 
 void pw::font::finalize() {
@@ -179,3 +181,4 @@ pw::font::data_t const &pw::font::get(pw::font::key_t const &key) {
 
 GLuint pw::font::shader_id() { return g_shader_id; }
 GLuint pw::font::texture_sampler_id() { return g_texture_sampler_id; }
+GLuint pw::font::size_id() { return g_size_id; }

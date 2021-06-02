@@ -189,7 +189,7 @@ void window_t::draw() const {
 
     glUseProgram(font::shader_id());
     for (auto const &text : m_text_2ds) {
-        text->draw();
+        text->draw(m_window);
     }
 
     glfwSwapBuffers(m_window);

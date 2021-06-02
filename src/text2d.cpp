@@ -4,6 +4,7 @@
 #include <vector>
 
 #include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -67,11 +68,15 @@ text2d_t::text2d_t(int x, int y, int font_size, std::string const &str)
                  m_uvs.data(), GL_STATIC_DRAW);
 }
 
-void text2d_t::draw() const {
+void text2d_t::draw(GLFWwindow *window) const {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,
                   font::get(font::key_t{m_font_size}).texture_id);
     glUniform1i(font::texture_sampler_id(), 0);
+
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    glUniform2f(font::size_id(), (float)width, (float)height);
 
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_id);
