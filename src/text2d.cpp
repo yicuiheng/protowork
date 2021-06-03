@@ -40,7 +40,7 @@ text2d_t::text2d_t(int x, int y, int font_size, std::string const &str)
         float uv_x = (float)info.texture_x / atlas_width;
         float uv_y = (float)info.texture_y / atlas_height;
         float uv_width = (float)info.width / atlas_width;
-        float uv_height = (float)(info.texture_y + info.height) / atlas_height;
+        float uv_height = (float)(info.texture_y) / atlas_height;
 
         x += info.advance_x;
 
