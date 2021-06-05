@@ -33,17 +33,17 @@ void camera_t::update(input_t const &input) {
     float diff_x = input.mouse.x - prev_mouse_x;
     float diff_y = input.mouse.y - prev_mouse_y;
 
-    if (is_left || is_middle) {
+    if (is_left) {
         auto len = glm::length(m_target_pos - m_origin_pos);
         m_origin_pos += -(diff_x * 0.1f) * right;
         m_origin_pos += (diff_y * 0.1f) * up;
         m_origin_pos = glm::normalize(m_origin_pos) * len;
     }
     if (is_middle) {
-        m_origin_pos += -(diff_x * 0.1f) * right;
-        m_origin_pos += (diff_y * 0.1f) * up;
-        m_target_pos += -(diff_x * 0.1f) * right;
-        m_target_pos += (diff_y * 0.1f) * up;
+        m_origin_pos += -(diff_x * 0.01f) * right;
+        m_origin_pos += (diff_y * 0.01f) * up;
+        m_target_pos += -(diff_x * 0.01f) * right;
+        m_target_pos += (diff_y * 0.01f) * up;
     }
 
     // TODO

@@ -16,13 +16,13 @@ out vec3 Normal_cameraspace;
 out vec3 LightDirection_cameraspace;
 out vec2 Coord;
 
-uniform mat4 MVP;
+uniform mat4 P;
 uniform mat4 V;
 uniform mat4 M;
 uniform vec3 LightPosition_worldspace;
 
 void main(){
-    gl_Position =  MVP * vec4(vertexPosition_modelspace, 1);
+    gl_Position =  P * V * M * vec4(vertexPosition_modelspace, 1);
 
     Position_worldspace = (M * vec4(vertexPosition_modelspace,1)).xyz;
 
@@ -118,7 +118,7 @@ window_t::window_t(config_t const &config) {
     m_shader_id =
         detail::load_shader_program(vertex_shader_code, fragment_shader_code);
 
-    m_mvp_matrix_id = glGetUniformLocation(m_shader_id, "MVP");
+    m_projection_matrix_id = glGetUniformLocation(m_shader_id, "P");
     m_view_matrix_id = glGetUniformLocation(m_shader_id, "V");
     m_model_matrix_id = glGetUniformLocation(m_shader_id, "M");
     m_light_id = glGetUniformLocation(m_shader_id, "LightPosition_worldspace");
@@ -174,9 +174,9 @@ void window_t::draw() const {
     glm::mat4 projection_matrix = m_camera.projection();
     glm::mat4 view_matrix = m_camera.view();
     glm::mat4 model_matrix = glm::mat4(1.0f);
-    glm::mat4 MVP = projection_matrix * view_matrix * model_matrix;
 
-    glUniformMatrix4fv(m_mvp_matrix_id, 1, GL_FALSE, &MVP[0][0]);
+    glUniformMatrix4fv(m_projection_matrix_id, 1, GL_FALSE,
+                       &projection_matrix[0][0]);
     glUniformMatrix4fv(m_model_matrix_id, 1, GL_FALSE, &model_matrix[0][0]);
     glUniformMatrix4fv(m_view_matrix_id, 1, GL_FALSE, &view_matrix[0][0]);
 
@@ -187,10 +187,26 @@ void window_t::draw() const {
         model->draw();
     }
 
-    glUseProgram(font::shader_id());
-    for (auto const &text : m_text_2ds) {
+    glDisable(GL_DEPTH_TEST);
+
+    glUseProgram(font::shader_2d_id());
+    for (auto const &text : m_2d_texts) {
         text->draw(m_window);
     }
+
+    glUseProgram(font::shader_3d_id());
+    glm::mat4 billboard_matrix = view_matrix;
+    billboard_matrix[3][0] = 0.f;
+    billboard_matrix[3][1] = 0.f;
+    billboard_matrix[3][2] = 0.f;
+    billboard_matrix = glm::inverse(billboard_matrix);
+    glm::mat4 MVP =
+        projection_matrix * view_matrix * billboard_matrix * model_matrix;
+    glUniformMatrix4fv(font::mvp_id(), 1, GL_FALSE, &MVP[0][0]);
+    for (auto const &text : m_3d_texts) {
+        text->draw(m_window);
+    }
+    glEnable(GL_DEPTH_TEST);
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();

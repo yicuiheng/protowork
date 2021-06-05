@@ -91,9 +91,13 @@ void finalize();
 
 data_t const &get(key_t const &);
 
-GLuint shader_id();
-GLuint texture_sampler_id();
+GLuint shader_2d_id();
+GLuint text2d_texture_sampler_id();
 GLuint size_id();
+
+GLuint shader_3d_id();
+GLuint text3d_texture_sampler_id();
+GLuint mvp_id();
 
 } // namespace font
 
@@ -112,6 +116,25 @@ private:
     GLuint m_uv_buffer_id;
 };
 
+struct text3d_t {
+    explicit text3d_t(GLFWwindow *window, glm::vec3 pos, int font_size,
+                      std::string const &str);
+    void draw(GLFWwindow *);
+    virtual ~text3d_t();
+
+    glm::vec3 &pos() { return m_pos; }
+    glm::vec3 const &pos() const { return m_pos; }
+
+private:
+    glm::vec3 m_pos;
+    int m_font_size;
+    std::string m_text;
+    std::vector<glm::vec3> m_vertices;
+    std::vector<glm::vec2> m_uvs;
+    GLuint m_vertex_buffer_id;
+    GLuint m_uv_buffer_id;
+};
+
 struct window_t {
     struct config_t {
         std::size_t width;
@@ -125,7 +148,15 @@ struct window_t {
         m_models.push_back(model);
     }
     void add_text_2d(std::shared_ptr<text2d_t> const &text) {
-        m_text_2ds.push_back(text);
+        m_2d_texts.push_back(text);
+    }
+
+    std::shared_ptr<text3d_t> add_text_3d(glm::vec3 const &pos, int font_size,
+                                          std::string const &text) {
+        auto result =
+            std::make_shared<text3d_t>(m_window, pos, font_size, text);
+        m_3d_texts.push_back(result);
+        return result;
     }
 
     void update();
@@ -136,10 +167,11 @@ struct window_t {
 private:
     GLFWwindow *m_window = nullptr;
     std::vector<std::shared_ptr<model_t>> m_models;
-    std::vector<std::shared_ptr<text2d_t>> m_text_2ds;
+    std::vector<std::shared_ptr<text2d_t>> m_2d_texts;
+    std::vector<std::shared_ptr<text3d_t>> m_3d_texts;
 
     id_t m_shader_id;
-    id_t m_mvp_matrix_id;
+    id_t m_projection_matrix_id;
     id_t m_view_matrix_id;
     id_t m_model_matrix_id;
     id_t m_light_id;

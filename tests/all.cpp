@@ -6,21 +6,15 @@ namespace pw = protowork;
 
 struct box_object_t : public pw::model_t {
     explicit box_object_t() {
-        /*
-        m_vertices.push_back(pw::pos_t{-0.5f,  0.5f,  0.5f});
-        m_vertices.push_back(pw::pos_t{ 0.5f,  0.5f,  0.5f});
-        m_vertices.push_back(pw::pos_t{ 0.5f,  0.5f, -0.5f});
-        m_vertices.push_back(pw::pos_t{-0.5f,  0.5f, -0.5f});
-        m_vertices.push_back(pw::pos_t{-0.5f, -0.5f,  0.5f});
-        m_vertices.push_back(pw::pos_t{ 0.5f, -0.5f,  0.5f});
-        m_vertices.push_back(pw::pos_t{ 0.5f, -0.5f, -0.5f});
+        m_vertices.push_back(pw::pos_t{-0.5f, 0.5f, 0.5f});
+        m_vertices.push_back(pw::pos_t{0.5f, 0.5f, 0.5f});
+        m_vertices.push_back(pw::pos_t{0.5f, 0.5f, -0.5f});
+        m_vertices.push_back(pw::pos_t{-0.5f, 0.5f, -0.5f});
+        m_vertices.push_back(pw::pos_t{-0.5f, -0.5f, 0.5f});
+        m_vertices.push_back(pw::pos_t{0.5f, -0.5f, 0.5f});
+        m_vertices.push_back(pw::pos_t{0.5f, -0.5f, -0.5f});
         m_vertices.push_back(pw::pos_t{-0.5f, -0.5f, -0.5f});
-        */
-        m_vertices.push_back(pw::pos_t{-1.f, -1.f, 0.f});
-        m_vertices.push_back(pw::pos_t{1.f, -1.f, 0.f});
-        m_vertices.push_back(pw::pos_t{0.f, 1.f, 0.f});
 
-        /*
         m_indices.push_back(0);
         m_indices.push_back(1);
         m_indices.push_back(3);
@@ -62,13 +56,8 @@ struct box_object_t : public pw::model_t {
         m_indices.push_back(5);
         m_indices.push_back(4);
         m_indices.push_back(6);
-        */
-        m_indices.push_back(0);
-        m_indices.push_back(1);
-        m_indices.push_back(2);
     }
 
-protected:
     std::vector<pw::pos_t> const &vbo_vertex_buffer() const override {
         return m_vertices;
     }
@@ -94,7 +83,11 @@ int main() {
     auto text_inu = std::make_shared<pw::text2d_t>(0, 0, 96, "inu");
     window.add_text_2d(text_inu);
 
+    auto text_hoge =
+        window.add_text_3d(glm::vec3{-0.5f, 0.5f, 0.5f}, 24, "hoge");
+
     while (!window.should_close()) {
+        text_hoge->pos() = box->vbo_vertex_buffer()[0];
         window.update();
         window.draw();
     }

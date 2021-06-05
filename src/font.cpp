@@ -31,7 +31,7 @@ std::string get_default_font_path() {
     return result;
 }
 
-static const char *vertex_shader_code = R"(
+static const char *vertex_shader_2d_code = R"(
 #version 430 core
 
 // Input vertex data, different for all executions of this shader.
@@ -52,21 +52,50 @@ void main(){
     UV = i_UV;
 })";
 
-static const char *fragment_shader_code = R"(
+static const char *fragment_shader_2d_code = R"(
 #version 430 core
 
 in vec2 UV;
 
-out vec4 color;
+out vec4 o_Color;
 
-uniform sampler2D textureSampler;
+uniform sampler2D u_TextureSampler;
 
 void main() {
-    color = texture(textureSampler, UV);
+    o_Color = texture(u_TextureSampler, UV);
 })";
-static GLuint g_shader_id;
-static GLuint g_texture_sampler_id;
-static GLuint g_size_id;
+
+static const char *vertex_shader_3d_code = R"(
+#version 430 core
+
+layout(location = 0) in vec3 i_Position_modelspace;
+layout(location = 1) in vec2 i_UV;
+
+out vec2 UV;
+
+uniform mat4 u_MVP;
+
+void main(){
+    gl_Position =  u_MVP * vec4(i_Position_modelspace, 1);
+    UV = i_UV;
+})";
+
+static const char *fragment_shader_3d_code = R"(
+#version 430 core
+
+in vec2 UV;
+
+out vec4 o_Color;
+
+uniform sampler2D u_TextureSampler;
+
+void main() {
+    o_Color = texture(u_TextureSampler, UV);
+})";
+
+static GLuint g_shader_2d_id;
+static GLuint g_shader_3d_id;
+static GLuint g_2d_texture_sampler_id;
 static FT_Library g_library;
 static FT_Face g_face;
 
@@ -99,17 +128,21 @@ void pw::font::initialize() {
         throw std::runtime_error{"failed to load font file"};
     }
 
-    g_shader_id =
-        detail::load_shader_program(vertex_shader_code, fragment_shader_code);
-    g_texture_sampler_id = glGetUniformLocation(g_shader_id, "textureSampler");
-    g_size_id = glGetUniformLocation(g_shader_id, "u_Size");
+    g_shader_2d_id = detail::load_shader_program(vertex_shader_2d_code,
+                                                 fragment_shader_2d_code);
+    g_2d_texture_sampler_id =
+        glGetUniformLocation(g_shader_2d_id, "u_TextureSampler");
+
+    g_shader_3d_id = detail::load_shader_program(vertex_shader_3d_code,
+                                                 fragment_shader_3d_code);
 }
 
 void pw::font::finalize() {
     for (auto const &[_, data] : g_font_data) {
         glDeleteTextures(1, &data.texture_id);
     }
-    glDeleteProgram(g_shader_id);
+    glDeleteProgram(g_shader_2d_id);
+    glDeleteProgram(g_shader_3d_id);
 }
 
 pw::font::data_t const &pw::font::get(pw::font::key_t const &key) {
@@ -179,6 +212,16 @@ pw::font::data_t const &pw::font::get(pw::font::key_t const &key) {
     }
 }
 
-GLuint pw::font::shader_id() { return g_shader_id; }
-GLuint pw::font::texture_sampler_id() { return g_texture_sampler_id; }
-GLuint pw::font::size_id() { return g_size_id; }
+GLuint pw::font::shader_2d_id() { return g_shader_2d_id; }
+GLuint pw::font::text2d_texture_sampler_id() { return g_2d_texture_sampler_id; }
+GLuint pw::font::size_id() {
+    return glGetUniformLocation(g_shader_2d_id, "u_Size");
+}
+
+GLuint pw::font::shader_3d_id() { return g_shader_3d_id; }
+GLuint pw::font::text3d_texture_sampler_id() {
+    return glGetUniformLocation(g_shader_3d_id, "u_TextureSampler");
+}
+GLuint pw::font::mvp_id() {
+    return glGetUniformLocation(g_shader_3d_id, "u_MVP");
+}
