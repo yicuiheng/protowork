@@ -189,24 +189,15 @@ void window_t::draw() const {
 
     glDisable(GL_DEPTH_TEST);
 
-    glUseProgram(font::shader_2d_id());
+    glUseProgram(font::shader_id());
     for (auto const &text : m_2d_texts) {
         text->draw(m_window);
     }
 
-    glUseProgram(font::shader_3d_id());
-    glm::mat4 billboard_matrix = view_matrix;
-    billboard_matrix[3][0] = 0.f;
-    billboard_matrix[3][1] = 0.f;
-    billboard_matrix[3][2] = 0.f;
-    billboard_matrix = glm::inverse(billboard_matrix);
-    glm::mat4 MVP =
-        projection_matrix * view_matrix * billboard_matrix * model_matrix;
-    glUniformMatrix4fv(font::mvp_id(), 1, GL_FALSE, &MVP[0][0]);
+    glm::mat4 MVP = projection_matrix * view_matrix;
     for (auto const &text : m_3d_texts) {
-        text->draw(m_window);
+        text->draw(m_window, MVP);
     }
-    glEnable(GL_DEPTH_TEST);
 
     glfwSwapBuffers(m_window);
     glfwPollEvents();

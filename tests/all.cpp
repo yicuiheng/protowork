@@ -83,10 +83,12 @@ int main() {
     auto text_inu = std::make_shared<pw::text2d_t>(0, 0, 96, "inu");
     window.add_text_2d(text_inu);
 
-    auto text_hoge =
-        window.add_text_3d(glm::vec3{-0.5f, 0.5f, 0.5f}, 24, "hoge");
+    auto text_hoge = std::make_shared<pw::text3d_t>(
+        glm::vec3{-0.5f, 0.5f, 0.5f}, 24, "hoge");
+    window.add_text_3d(text_hoge);
 
     while (!window.should_close()) {
+        text_inu->x() += 1;
         text_hoge->pos() = box->vbo_vertex_buffer()[0];
         window.update();
         window.draw();

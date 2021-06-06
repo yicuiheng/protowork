@@ -91,20 +91,18 @@ void finalize();
 
 data_t const &get(key_t const &);
 
-GLuint shader_2d_id();
-GLuint text2d_texture_sampler_id();
+GLuint shader_id();
+GLuint texture_sampler_id();
 GLuint size_id();
-
-GLuint shader_3d_id();
-GLuint text3d_texture_sampler_id();
-GLuint mvp_id();
 
 } // namespace font
 
 struct text2d_t {
     explicit text2d_t(int x, int y, int font_size, std::string const &str);
-    void draw(GLFWwindow *) const;
+    void draw(GLFWwindow *);
     virtual ~text2d_t();
+    int &x() { return m_x; }
+    int &y() { return m_y; }
 
 private:
     int m_x, m_y;
@@ -117,9 +115,8 @@ private:
 };
 
 struct text3d_t {
-    explicit text3d_t(GLFWwindow *window, glm::vec3 pos, int font_size,
-                      std::string const &str);
-    void draw(GLFWwindow *);
+    explicit text3d_t(glm::vec3 pos, int font_size, std::string const &str);
+    void draw(GLFWwindow *, glm::mat4 const &m);
     virtual ~text3d_t();
 
     glm::vec3 &pos() { return m_pos; }
@@ -129,7 +126,7 @@ private:
     glm::vec3 m_pos;
     int m_font_size;
     std::string m_text;
-    std::vector<glm::vec3> m_vertices;
+    std::vector<glm::vec2> m_vertices;
     std::vector<glm::vec2> m_uvs;
     GLuint m_vertex_buffer_id;
     GLuint m_uv_buffer_id;
@@ -150,13 +147,8 @@ struct window_t {
     void add_text_2d(std::shared_ptr<text2d_t> const &text) {
         m_2d_texts.push_back(text);
     }
-
-    std::shared_ptr<text3d_t> add_text_3d(glm::vec3 const &pos, int font_size,
-                                          std::string const &text) {
-        auto result =
-            std::make_shared<text3d_t>(m_window, pos, font_size, text);
-        m_3d_texts.push_back(result);
-        return result;
+    void add_text_3d(std::shared_ptr<text3d_t> const &text) {
+        m_3d_texts.push_back(text);
     }
 
     void update();
