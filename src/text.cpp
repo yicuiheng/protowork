@@ -12,22 +12,14 @@
 
 using namespace protowork;
 
-text2d_t::text2d_t(int x, int y, int font_size, std::string const &str)
-    : m_x{x}, m_y{y}, m_font_size{font_size}, m_text{str} {
-    glGenBuffers(1, &m_vertex_buffer_id);
-    glGenBuffers(1, &m_uv_buffer_id);
-}
-
-void text2d_t::draw(GLFWwindow *window) {
-    auto const &font_data = font::get(font::key_t{m_font_size});
+static void draw_impl(GLFWwindow *window, int x, int y, int font_size,
+                      std::string const &text) {
+    auto const &font_data = font::get(font::key_t{font_size});
     int atlas_width = font_data.atlas_width;
     int atlas_height = font_data.atlas_height;
-    int x = m_x;
-    int y = m_y;
-    m_vertices.clear();
-    m_uvs.clear();
-    for (unsigned int i = 0; i < m_text.size(); i++) {
-        int c = m_text[i];
+    std::vector<glm::vec2> vertices, uvs;
+    for (unsigned int i = 0; i < text.size(); i++) {
+        int c = text[i];
         auto const &info = font_data.char_infos.at(c);
         auto left = x + info.bearing_x;
         auto right = left + info.width;
@@ -38,13 +30,13 @@ void text2d_t::draw(GLFWwindow *window) {
         glm::vec2 vertex_down_right = glm::vec2(right, down);
         glm::vec2 vertex_down_left = glm::vec2(left, down);
 
-        m_vertices.push_back(vertex_up_left);
-        m_vertices.push_back(vertex_down_left);
-        m_vertices.push_back(vertex_up_right);
+        vertices.push_back(vertex_up_left);
+        vertices.push_back(vertex_down_left);
+        vertices.push_back(vertex_up_right);
 
-        m_vertices.push_back(vertex_down_right);
-        m_vertices.push_back(vertex_up_right);
-        m_vertices.push_back(vertex_down_left);
+        vertices.push_back(vertex_down_right);
+        vertices.push_back(vertex_up_right);
+        vertices.push_back(vertex_down_left);
 
         float uv_x = (float)info.texture_x / atlas_width;
         float uv_y = (float)info.texture_y / atlas_height;
@@ -58,25 +50,17 @@ void text2d_t::draw(GLFWwindow *window) {
         glm::vec2 uv_down_right = glm::vec2(uv_x + uv_width, uv_y + uv_height);
         glm::vec2 uv_down_left = glm::vec2(uv_x, uv_y + uv_height);
 
-        m_uvs.push_back(uv_up_left);
-        m_uvs.push_back(uv_down_left);
-        m_uvs.push_back(uv_up_right);
+        uvs.push_back(uv_up_left);
+        uvs.push_back(uv_down_left);
+        uvs.push_back(uv_up_right);
 
-        m_uvs.push_back(uv_down_right);
-        m_uvs.push_back(uv_up_right);
-        m_uvs.push_back(uv_down_left);
+        uvs.push_back(uv_down_right);
+        uvs.push_back(uv_up_right);
+        uvs.push_back(uv_down_left);
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_id);
-    glBufferData(GL_ARRAY_BUFFER, m_vertices.size() * sizeof(glm::vec2),
-                 m_vertices.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, m_uv_buffer_id);
-    glBufferData(GL_ARRAY_BUFFER, m_uvs.size() * sizeof(glm::vec2),
-                 m_uvs.data(), GL_STATIC_DRAW);
-
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D,
-                  font::get(font::key_t{m_font_size}).texture_id);
+    glBindTexture(GL_TEXTURE_2D, font::get(font::key_t{font_size}).texture_id);
     glUniform1i(font::texture_sampler_id(), 0);
 
     int width, height;
@@ -84,23 +68,36 @@ void text2d_t::draw(GLFWwindow *window) {
     glUniform2f(font::size_id(), (float)width, (float)height);
 
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_id);
+    glBindBuffer(GL_ARRAY_BUFFER, font::vertex_buffer_id());
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec2),
+                 vertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, m_uv_buffer_id);
+    glBindBuffer(GL_ARRAY_BUFFER, font::uv_buffer_id());
+    glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), uvs.data(),
+                 GL_STATIC_DRAW);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDrawArrays(GL_TRIANGLES, 0, m_vertices.size());
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
     glDisable(GL_BLEND);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
 }
 
-text2d_t::~text2d_t() {
-    glDeleteBuffers(1, &m_vertex_buffer_id);
-    glDeleteBuffers(1, &m_uv_buffer_id);
+void text2d_t::draw(GLFWwindow *window) const {
+    draw_impl(window, x, y, font_size, text);
+}
+
+void text3d_t::draw(GLFWwindow *window, glm::mat4 const &mat) const {
+    int screen_width, screen_height;
+    glfwGetWindowSize(window, &screen_width, &screen_height);
+    auto pos = mat * glm::vec4{this->pos, 1.f};
+
+    int x = (pos.x / pos.w + 1.f) * screen_width / 2.f;
+    int y = (pos.y / pos.w + 1.f) * screen_height / 2.f;
+    draw_impl(window, x, y, font_size, text);
 }

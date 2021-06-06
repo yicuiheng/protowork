@@ -38,8 +38,6 @@ struct camera_t {
     matrix_t view() const;
 
 private:
-    void
-    rotate_around_target(input_t::mouse_t const &); // drag with left button
     matrix_t m_view;
     pos_t m_origin_pos = pos_t{0, 0, 5};
     pos_t m_target_pos = pos_t{0, 0, 0};
@@ -50,6 +48,10 @@ struct model_t {
     virtual ~model_t();
 
     void draw() const;
+
+    static void initialize(); // initialize shader for model_t
+    static void finalize();   // finalize for model_t
+    static void before_drawing(camera_t const &);
 
 protected:
     virtual std::vector<pos_t> const &vbo_vertex_buffer() const = 0;
@@ -81,55 +83,36 @@ struct char_info_t {
 
 struct data_t {
     std::unordered_map<int, char_info_t> char_infos;
-    GLuint texture_id;
+    id_t texture_id;
     int atlas_width;
     int atlas_height;
 };
 
 void initialize();
 void finalize();
+void before_drawing();
 
 data_t const &get(key_t const &);
 
-GLuint shader_id();
-GLuint texture_sampler_id();
-GLuint size_id();
+id_t texture_sampler_id();
+id_t size_id();
+id_t vertex_buffer_id();
+id_t uv_buffer_id();
 
 } // namespace font
 
 struct text2d_t {
-    explicit text2d_t(int x, int y, int font_size, std::string const &str);
-    void draw(GLFWwindow *);
-    virtual ~text2d_t();
-    int &x() { return m_x; }
-    int &y() { return m_y; }
+    int x, y, font_size;
+    std::string text;
 
-private:
-    int m_x, m_y;
-    int m_font_size;
-    std::string m_text;
-    std::vector<glm::vec2> m_vertices;
-    std::vector<glm::vec2> m_uvs;
-    GLuint m_vertex_buffer_id;
-    GLuint m_uv_buffer_id;
+    void draw(GLFWwindow *) const;
 };
 
 struct text3d_t {
-    explicit text3d_t(glm::vec3 pos, int font_size, std::string const &str);
-    void draw(GLFWwindow *, glm::mat4 const &m);
-    virtual ~text3d_t();
-
-    glm::vec3 &pos() { return m_pos; }
-    glm::vec3 const &pos() const { return m_pos; }
-
-private:
-    glm::vec3 m_pos;
-    int m_font_size;
-    std::string m_text;
-    std::vector<glm::vec2> m_vertices;
-    std::vector<glm::vec2> m_uvs;
-    GLuint m_vertex_buffer_id;
-    GLuint m_uv_buffer_id;
+    void draw(GLFWwindow *, glm::mat4 const &) const;
+    pos_t pos;
+    int font_size;
+    std::string text;
 };
 
 struct window_t {

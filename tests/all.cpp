@@ -88,8 +88,8 @@ int main() {
     window.add_text_3d(text_hoge);
 
     while (!window.should_close()) {
-        text_inu->x() += 1;
-        text_hoge->pos() = box->vbo_vertex_buffer()[0];
+        text_inu->x += 1;
+        text_hoge->pos = box->vbo_vertex_buffer()[0];
         window.update();
         window.draw();
     }

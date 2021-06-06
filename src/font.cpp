@@ -65,8 +65,10 @@ void main() {
     o_Color = texture(u_TextureSampler, UV);
 })";
 
-static GLuint g_shader_id;
-static GLuint g_texture_sampler_id;
+static id_t g_shader_id;
+static id_t g_texture_sampler_id;
+static id_t g_vertex_buffer_id;
+static id_t g_uv_buffer_id;
 static FT_Library g_library;
 static FT_Face g_face;
 
@@ -103,14 +105,21 @@ void pw::font::initialize() {
         detail::load_shader_program(vertex_shader_code, fragment_shader_code);
     g_texture_sampler_id =
         glGetUniformLocation(g_shader_id, "u_TextureSampler");
+
+    glGenBuffers(1, &g_vertex_buffer_id);
+    glGenBuffers(1, &g_uv_buffer_id);
 }
 
 void pw::font::finalize() {
     for (auto const &[_, data] : g_font_data) {
         glDeleteTextures(1, &data.texture_id);
     }
+    glDeleteBuffers(1, &g_vertex_buffer_id);
+    glDeleteBuffers(1, &g_uv_buffer_id);
     glDeleteProgram(g_shader_id);
 }
+
+void pw::font::before_drawing() { glUseProgram(g_shader_id); }
 
 pw::font::data_t const &pw::font::get(pw::font::key_t const &key) {
     auto found = g_font_data.find(key);
@@ -179,8 +188,7 @@ pw::font::data_t const &pw::font::get(pw::font::key_t const &key) {
     }
 }
 
-GLuint pw::font::shader_id() { return g_shader_id; }
-GLuint pw::font::texture_sampler_id() { return g_texture_sampler_id; }
-GLuint pw::font::size_id() {
-    return glGetUniformLocation(g_shader_id, "u_Size");
-}
+id_t pw::font::texture_sampler_id() { return g_texture_sampler_id; }
+id_t pw::font::size_id() { return glGetUniformLocation(g_shader_id, "u_Size"); }
+id_t pw::font::vertex_buffer_id() { return g_vertex_buffer_id; }
+id_t pw::font::uv_buffer_id() { return g_uv_buffer_id; }

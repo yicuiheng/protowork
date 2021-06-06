@@ -38,7 +38,7 @@ id_t protowork::detail::load_shader_program(const char *vertex_shader,
         throw std::runtime_error{std::string{msg.data()}};
     }
     // Link the program
-    GLuint program_id = glCreateProgram();
+    id_t program_id = glCreateProgram();
     glAttachShader(program_id, vertex_shader_id);
     glAttachShader(program_id, fragment_shader_id);
     glLinkProgram(program_id);
