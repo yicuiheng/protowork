@@ -55,11 +55,13 @@ struct model_t {
 
 protected:
     virtual std::vector<pos_t> const &vbo_vertex_buffer() const = 0;
+    virtual std::vector<glm::vec3> const &vbo_normal_buffer() const = 0;
     virtual std::vector<index_t> const &vbo_index_buffer() const = 0;
 
 private:
     id_t m_vertex_array_id;
     id_t m_vbo_vertex_buffer_id;
+    id_t m_vbo_normal_buffer_id;
     id_t m_vbo_index_buffer_id;
 };
 
@@ -149,7 +151,6 @@ private:
     id_t m_projection_matrix_id;
     id_t m_view_matrix_id;
     id_t m_model_matrix_id;
-    id_t m_light_id;
     camera_t m_camera;
 
     input_t m_input;

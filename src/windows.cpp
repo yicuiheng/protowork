@@ -37,7 +37,7 @@ window_t::window_t(config_t const &config) {
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    glDisable(GL_CULL_FACE);
+    glEnable(GL_CULL_FACE);
     glPointSize(10.0f);
 
     model_t::initialize();

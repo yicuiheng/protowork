@@ -47,7 +47,7 @@ struct box_object_t : public pw::model_t {
         m_indices.push_back(7);
         m_indices.push_back(0);
         m_indices.push_back(4);
-        m_indices.push_back(9);
+        m_indices.push_back(0);
         m_indices.push_back(7);
 
         m_indices.push_back(7);
@@ -59,6 +59,9 @@ struct box_object_t : public pw::model_t {
     }
 
     std::vector<pw::pos_t> const &vbo_vertex_buffer() const override {
+        return m_vertices;
+    }
+    std::vector<glm::vec3> const &vbo_normal_buffer() const override {
         return m_vertices;
     }
     std::vector<pw::index_t> const &vbo_index_buffer() const override {
@@ -83,13 +86,20 @@ int main() {
     auto text_inu = std::make_shared<pw::text2d_t>(0, 0, 96, "inu");
     window.add_text_2d(text_inu);
 
-    auto text_hoge = std::make_shared<pw::text3d_t>(
-        glm::vec3{-0.5f, 0.5f, 0.5f}, 24, "hoge");
-    window.add_text_3d(text_hoge);
+    auto const &vertices = box->vbo_vertex_buffer();
+    std::vector<std::shared_ptr<pw::text3d_t>> text_vertices;
+    for (int i = 0; i < vertices.size(); i++) {
+        auto t = std::make_shared<pw::text3d_t>(vertices[i], 24,
+                                                "(" + std::to_string(i) + ")");
+        text_vertices.push_back(t);
+        window.add_text_3d(t);
+    }
 
     while (!window.should_close()) {
         text_inu->x += 1;
-        text_hoge->pos = box->vbo_vertex_buffer()[0];
+        for (int i = 0; i < vertices.size(); i++) {
+            text_vertices[i]->pos = vertices[i];
+        }
         window.update();
         window.draw();
     }

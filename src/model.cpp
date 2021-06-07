@@ -8,92 +8,60 @@ using namespace protowork;
 static const char *vertex_shader_code = R"(
 #version 430 core
 
-layout(location = 0) in vec3 vertexPosition_modelspace;
-layout(location = 1) in vec3 vertexNormal_modelspace;
-layout(location = 2) in vec2 vertexCoord;
+layout(location = 0) in vec3 i_VertexPosition_modelspace;
+layout(location = 1) in vec3 i_VertexNormal_modelspace;
+layout(location = 2) in vec2 i_VertexCoord;
 
-out vec3 Position_worldspace;
-out vec3 Normal_cameraspace;
-out vec3 LightDirection_cameraspace;
+out vec3 Normal_worldspace;
 out vec2 Coord;
 
-uniform mat4 P;
-uniform mat4 V;
-uniform mat4 M;
-uniform vec3 LightPosition_worldspace;
+uniform mat4 u_ProjectionMatrix;
+uniform mat4 u_ViewMatrix;
+uniform mat4 u_ModelMatrix;
 
 void main(){
-    gl_Position =  P * V * M * vec4(vertexPosition_modelspace, 1);
+    gl_Position =  u_ProjectionMatrix * u_ViewMatrix * u_ModelMatrix * vec4(i_VertexPosition_modelspace, 1);
 
-    Position_worldspace = (M * vec4(vertexPosition_modelspace,1)).xyz;
-
-    vec3 vertexPosition_cameraspace = ( V * M * vec4(vertexPosition_modelspace,1)).xyz;
-    vec3 EyeDirection_cameraspace = vec3(0,0,0) - vertexPosition_cameraspace;
-
-    vec3 LightPosition_cameraspace = ( V * vec4(LightPosition_worldspace,1)).xyz;
-    LightDirection_cameraspace = LightPosition_cameraspace + EyeDirection_cameraspace;
-
-    Normal_cameraspace = ( V * M * vec4(vertexNormal_modelspace,0)).xyz;
-
-    Coord = vertexCoord;
+    Normal_worldspace = i_VertexNormal_modelspace; // (u_ModelMatrix * vec4(i_VertexNormal_modelspace, 1)).xyz;
+    Coord = i_VertexCoord;
 })";
 
 static const char *fragment_shader_code = R"(
 #version 430 core
 
-in vec3 Position_worldspace;
-in vec3 Normal_cameraspace;
-in vec3 LightDirection_cameraspace;
+in vec3 Normal_worldspace;
 in vec2 Coord;
 
-out vec3 color;
-
-uniform vec3 LightPosition_worldspace;
-
-vec3 calcColor(vec2 coord,float n) {
-    vec3 color1 = vec3(1.0, 0.2, 0.2);
-    vec3 color2 = vec3(0.9, 0.8, 0.8);
-
-    coord = coord * n;
-    float a = mod(floor(coord.x) + floor(coord.y), 2.0);
-    return mix(color1, color2, a);
-}
+out vec4 o_Color;
 
 void main()
 {
     vec3 LightColor = vec3(1,1,1);
-    float LightPower = 50.0f;
+    vec3 LightDirection_worldspace = vec3(-1, -1, -1);
 
     // Material properties
-    vec3 MaterialDiffuseColor = calcColor(Coord, 5.0);
-    vec3 MaterialAmbientColor = vec3(0.1, 0.1, 0.1) * MaterialDiffuseColor;
+    vec3 MaterialDiffuseColor = vec3(1.0, 0.2, 0.2);
 
-    float distance = length(LightPosition_worldspace - Position_worldspace);
-
-    vec3 n = normalize(Normal_cameraspace);
-    vec3 l = normalize(LightDirection_cameraspace);
+    vec3 n = normalize(Normal_worldspace);
+    vec3 l = normalize(LightDirection_worldspace);
     float cosTheta = clamp(dot(n, l), 0, 1);
-
-    color =
-        MaterialAmbientColor +
-        MaterialDiffuseColor * LightColor * LightPower * cosTheta / (distance*distance);
-}
-)";
+    o_Color =
+        vec4(normalize(MaterialDiffuseColor * LightColor * cosTheta), 1);
+})";
 
 static id_t g_shader_id;
 static id_t g_projection_matrix_id;
 static id_t g_view_matrix_id;
 static id_t g_model_matrix_id;
-static id_t g_light_id;
 
 void model_t::initialize() {
     g_shader_id =
         detail::load_shader_program(vertex_shader_code, fragment_shader_code);
 
-    g_projection_matrix_id = glGetUniformLocation(g_shader_id, "P");
-    g_view_matrix_id = glGetUniformLocation(g_shader_id, "V");
-    g_model_matrix_id = glGetUniformLocation(g_shader_id, "M");
-    g_light_id = glGetUniformLocation(g_shader_id, "LightPosition_worldspace");
+    g_projection_matrix_id =
+        glGetUniformLocation(g_shader_id, "u_ProjectionMatrix");
+    g_view_matrix_id = glGetUniformLocation(g_shader_id, "u_ViewMatrix");
+    g_model_matrix_id = glGetUniformLocation(g_shader_id, "u_ModelMatrix");
 }
 
 void model_t::finalize() { glDeleteProgram(g_shader_id); }
@@ -107,9 +75,6 @@ void model_t::before_drawing(camera_t const &camera) {
     glUniformMatrix4fv(g_projection_matrix_id, 1, GL_FALSE,
                        &projection_matrix[0][0]);
     glUniformMatrix4fv(g_view_matrix_id, 1, GL_FALSE, &view_matrix[0][0]);
-
-    glm::vec3 lightPos = glm::vec3(4.0f, 4.0f, -1.0f);
-    glUniform3f(g_light_id, lightPos.x, lightPos.y, lightPos.z);
 }
 
 model_t::model_t() {
@@ -117,12 +82,14 @@ model_t::model_t() {
     glBindVertexArray(m_vertex_array_id);
 
     glGenBuffers(1, &m_vbo_vertex_buffer_id);
+    glGenBuffers(1, &m_vbo_normal_buffer_id);
     glGenBuffers(1, &m_vbo_index_buffer_id);
 }
 
 model_t::~model_t() {
     glDeleteVertexArrays(1, &m_vertex_array_id);
     glDeleteBuffers(1, &m_vbo_vertex_buffer_id);
+    glDeleteBuffers(1, &m_vbo_normal_buffer_id);
     glDeleteBuffers(1, &m_vbo_index_buffer_id);
 }
 
@@ -137,6 +104,13 @@ void model_t::draw() const {
                  vertex_buffer.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
+    auto const &normal_buffer = this->vbo_normal_buffer();
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_normal_buffer_id);
+    glBufferData(GL_ARRAY_BUFFER, normal_buffer.size() * sizeof(pos_t),
+                 normal_buffer.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
     auto const &index_buffer = this->vbo_index_buffer();
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_index_buffer_id);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_buffer.size() * sizeof(index_t),
@@ -146,4 +120,5 @@ void model_t::draw() const {
                    nullptr);
 
     glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
 }
