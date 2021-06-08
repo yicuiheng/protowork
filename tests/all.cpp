@@ -4,58 +4,58 @@
 
 namespace pw = protowork;
 
-struct box_object_t : public pw::model_t {
-    explicit box_object_t() {
-        m_vertices.push_back(pw::pos_t{-0.5f, 0.5f, 0.5f});
-        m_vertices.push_back(pw::pos_t{0.5f, 0.5f, 0.5f});
-        m_vertices.push_back(pw::pos_t{0.5f, 0.5f, -0.5f});
-        m_vertices.push_back(pw::pos_t{-0.5f, 0.5f, -0.5f});
-        m_vertices.push_back(pw::pos_t{-0.5f, -0.5f, 0.5f});
-        m_vertices.push_back(pw::pos_t{0.5f, -0.5f, 0.5f});
-        m_vertices.push_back(pw::pos_t{0.5f, -0.5f, -0.5f});
-        m_vertices.push_back(pw::pos_t{-0.5f, -0.5f, -0.5f});
+template <typename T, typename U> T as(U x) { return static_cast<T>(x); }
 
-        m_indices.push_back(0);
-        m_indices.push_back(1);
-        m_indices.push_back(3);
-        m_indices.push_back(2);
-        m_indices.push_back(3);
-        m_indices.push_back(1);
+struct sphere_object_t : public pw::model_t {
+    explicit sphere_object_t() {
+        pw::pos_t top{0.f, 1.f, 0.f};
+        constexpr int N_DIVISION = 12;
+        m_vertices.push_back(top);
+        std::vector<std::pair<int, pw::pos_t>> prev_phi(N_DIVISION,
+                                                        std::make_pair(0, top));
 
-        m_indices.push_back(0);
-        m_indices.push_back(4);
-        m_indices.push_back(1);
-        m_indices.push_back(5);
-        m_indices.push_back(1);
-        m_indices.push_back(4);
+        for (int i = 0; i < N_DIVISION; i++) {
+            int phi =
+                2.f * M_PI * as<float>(i) / as<float>(N_DIVISION) + M_PI / 2.f;
+            float y = std::sin(phi);
+            float x = std::cos(phi);
+            float z = 0.f;
+            auto prev_theta =
+                std::make_pair(as<int>(m_vertices.size()), glm::vec3{x, y, z});
+            m_vertices.push_back(prev_theta.second);
 
-        m_indices.push_back(1);
-        m_indices.push_back(5);
-        m_indices.push_back(2);
-        m_indices.push_back(6);
-        m_indices.push_back(2);
-        m_indices.push_back(5);
+            for (int j = 1; j <= N_DIVISION; j++) {
+                int theta = 2.f * M_PI * as<float>(j) / as<float>(N_DIVISION);
+                float y = std::sin(phi);
+                float x = std::cos(phi) * std::cos(theta);
+                float z = std::cos(phi) * std::sin(theta);
 
-        m_indices.push_back(2);
-        m_indices.push_back(6);
-        m_indices.push_back(3);
-        m_indices.push_back(7);
-        m_indices.push_back(3);
-        m_indices.push_back(6);
+                pw::pos_t current{x, y, z};
+                int current_id = m_vertices.size();
+                if (j == N_DIVISION) {
+                    current_id -= N_DIVISION;
+                } else {
+                    m_vertices.emplace_back(current);
+                }
 
-        m_indices.push_back(3);
-        m_indices.push_back(7);
-        m_indices.push_back(0);
-        m_indices.push_back(4);
-        m_indices.push_back(0);
-        m_indices.push_back(7);
+                if (i != 0) {
+                    m_indices.emplace_back(prev_phi[j - 1].first);
+                    m_indices.emplace_back(prev_theta.first);
+                    m_indices.emplace_back(prev_phi[j].first);
+                }
 
-        m_indices.push_back(7);
-        m_indices.push_back(6);
-        m_indices.push_back(4);
-        m_indices.push_back(5);
-        m_indices.push_back(4);
-        m_indices.push_back(6);
+                m_indices.emplace_back(current_id);
+                m_indices.emplace_back(prev_theta.first);
+                m_indices.emplace_back(prev_phi[j].first);
+
+                prev_theta = std::make_pair(current_id, current);
+            }
+            /*
+            for (int i = 0; i < N_DIVISION; i++) {
+                int id = m_vertices.size() - N_DIVISION + i;
+                prev_phi[i] = std::make_pair(id, m_vertices[id]);
+            } */
+        }
     }
 
     std::vector<pw::pos_t> const &vbo_vertex_buffer() const override {
@@ -77,7 +77,7 @@ int main() {
     auto window =
         pw::window_t{pw::window_t::config_t{800, 600, "all test window"}};
 
-    auto box = std::make_shared<box_object_t>();
+    auto box = std::make_shared<sphere_object_t>();
     window.add_model(box);
 
     auto text_neko = std::make_shared<pw::text2d_t>(400, 300, 32, "neko");
