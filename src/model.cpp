@@ -36,17 +36,20 @@ out vec4 o_Color;
 
 void main()
 {
-    vec3 LightColor = vec3(1,1,1);
-    vec3 LightDirection_worldspace = vec3(-1, -1, -1);
+    vec3 lightColor = vec3(1,1,1);
+    vec3 lightDir_worldspace = vec3(-1, -1, -1);
 
-    // Material properties
-    vec3 MaterialDiffuseColor = vec3(1.0, 0.2, 0.2);
+    vec3 materialColor = vec3(1.0, 0.2, 0.2);
 
     vec3 n = normalize(Normal_worldspace);
-    vec3 l = normalize(LightDirection_worldspace);
-    float cosTheta = clamp(dot(n, l), 0, 1);
+    vec3 l = normalize(lightDir_worldspace);
+    float cosTheta = clamp(dot(n, -l), 0, 1);
+    vec3 diffuseColor = materialColor * lightColor * cosTheta;
+
+    vec3 ambientColor = vec3(0.2, 0.1, 0.1);
+
     o_Color =
-        vec4(normalize(MaterialDiffuseColor * LightColor * cosTheta), 1);
+        vec4(diffuseColor + ambientColor, 1);
 })";
 
 static id_t g_shader_id;

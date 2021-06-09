@@ -1,36 +1,42 @@
 #include <cassert>
 #include <iostream>
+#include <cmath>
 #include <protowork.hpp>
 
 namespace pw = protowork;
 
-template <typename T, typename U> T as(U x) { return static_cast<T>(x); }
+pw::pos_t angle_to_pos(float phi, float theta) {
+    float sin_phi = std::sin(phi);
+    float cos_phi = std::cos(phi);
+    float sin_theta = std::sin(theta);
+    float cos_theta = std::cos(theta);
+    return pw::pos_t{sin_phi * cos_theta, cos_phi, sin_phi * sin_theta};
+}
 
 struct sphere_object_t : public pw::model_t {
     explicit sphere_object_t() {
         pw::pos_t top{0.f, 1.f, 0.f};
-        constexpr int N_DIVISION = 12;
+        constexpr int N_DIVISION = 8;
         m_vertices.push_back(top);
-        std::vector<std::pair<int, pw::pos_t>> prev_phi(N_DIVISION,
-                                                        std::make_pair(0, top));
+        using row_t = std::vector<std::pair<int, pw::pos_t>>;
+        row_t prev_row(N_DIVISION + 1, std::make_pair(0, top));
 
-        for (int i = 0; i < N_DIVISION; i++) {
-            int phi =
-                2.f * M_PI * as<float>(i) / as<float>(N_DIVISION) + M_PI / 2.f;
-            float y = std::sin(phi);
-            float x = std::cos(phi);
-            float z = 0.f;
+        for (int i = 1; i <= N_DIVISION; i++) {
+            float phi =
+                M_PI * static_cast<float>(i) / static_cast<float>(N_DIVISION);
+            auto init_pos = angle_to_pos(phi, 0.f);
             auto prev_theta =
-                std::make_pair(as<int>(m_vertices.size()), glm::vec3{x, y, z});
+                std::make_pair(static_cast<int>(m_vertices.size()), init_pos);
             m_vertices.push_back(prev_theta.second);
 
-            for (int j = 1; j <= N_DIVISION; j++) {
-                int theta = 2.f * M_PI * as<float>(j) / as<float>(N_DIVISION);
-                float y = std::sin(phi);
-                float x = std::cos(phi) * std::cos(theta);
-                float z = std::cos(phi) * std::sin(theta);
+            row_t current_row;
+            current_row.push_back(prev_theta);
 
-                pw::pos_t current{x, y, z};
+            for (int j = 1; j <= N_DIVISION; j++) {
+                float theta = 2.f * M_PI * static_cast<float>(j) /
+                              static_cast<float>(N_DIVISION);
+                auto current = angle_to_pos(phi, theta);
+
                 int current_id = m_vertices.size();
                 if (j == N_DIVISION) {
                     current_id -= N_DIVISION;
@@ -38,23 +44,19 @@ struct sphere_object_t : public pw::model_t {
                     m_vertices.emplace_back(current);
                 }
 
-                if (i != 0) {
-                    m_indices.emplace_back(prev_phi[j - 1].first);
+                m_indices.emplace_back(prev_row[j - 1].first);
+                m_indices.emplace_back(prev_row[j].first);
+                m_indices.emplace_back(prev_theta.first);
+                if (i != N_DIVISION) {
+                    m_indices.emplace_back(current_id);
                     m_indices.emplace_back(prev_theta.first);
-                    m_indices.emplace_back(prev_phi[j].first);
+                    m_indices.emplace_back(prev_row[j].first);
                 }
 
-                m_indices.emplace_back(current_id);
-                m_indices.emplace_back(prev_theta.first);
-                m_indices.emplace_back(prev_phi[j].first);
-
                 prev_theta = std::make_pair(current_id, current);
+                current_row.push_back(prev_theta);
             }
-            /*
-            for (int i = 0; i < N_DIVISION; i++) {
-                int id = m_vertices.size() - N_DIVISION + i;
-                prev_phi[i] = std::make_pair(id, m_vertices[id]);
-            } */
+            prev_row = std::move(current_row);
         }
     }
 
