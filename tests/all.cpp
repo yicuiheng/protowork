@@ -38,15 +38,18 @@ struct sphere_object_t : public pw::model_t {
                 auto current = angle_to_pos(phi, theta);
 
                 int current_id = m_vertices.size();
+
                 if (j == N_DIVISION) {
                     current_id -= N_DIVISION;
                 } else {
                     m_vertices.emplace_back(current);
                 }
 
-                m_indices.emplace_back(prev_row[j - 1].first);
-                m_indices.emplace_back(prev_row[j].first);
-                m_indices.emplace_back(prev_theta.first);
+                if (i != 1) {
+                    m_indices.emplace_back(prev_row[j - 1].first);
+                    m_indices.emplace_back(prev_row[j].first);
+                    m_indices.emplace_back(prev_theta.first);
+                }
                 if (i != N_DIVISION) {
                     m_indices.emplace_back(current_id);
                     m_indices.emplace_back(prev_theta.first);
@@ -79,8 +82,8 @@ int main() {
     auto window =
         pw::window_t{pw::window_t::config_t{800, 600, "all test window"}};
 
-    auto box = std::make_shared<sphere_object_t>();
-    window.add_model(box);
+    auto sphere = std::make_shared<sphere_object_t>();
+    window.add_model(sphere);
 
     auto text_neko = std::make_shared<pw::text2d_t>(400, 300, 32, "neko");
     window.add_text_2d(text_neko);
@@ -88,7 +91,7 @@ int main() {
     auto text_inu = std::make_shared<pw::text2d_t>(0, 0, 96, "inu");
     window.add_text_2d(text_inu);
 
-    auto const &vertices = box->vbo_vertex_buffer();
+    auto const &vertices = sphere->vbo_vertex_buffer();
     std::vector<std::shared_ptr<pw::text3d_t>> text_vertices;
     for (int i = 0; i < vertices.size(); i++) {
         auto t = std::make_shared<pw::text3d_t>(vertices[i], 24,
