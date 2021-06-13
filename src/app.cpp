@@ -3,10 +3,13 @@
 #include <stdexcept>
 
 #include <protowork.hpp>
+#include <protowork/world.hpp>
+#include <protowork/ui.hpp>
+#include <protowork/font.hpp>
 
 using namespace protowork;
 
-window_t::window_t(config_t const &config) {
+app_t::app_t(config_t const &config) {
     if (!glfwInit())
         throw std::runtime_error{"Failed to initialize GLFW"};
 
@@ -40,17 +43,17 @@ window_t::window_t(config_t const &config) {
     glEnable(GL_CULL_FACE);
     glPointSize(10.0f);
 
-    model_t::initialize();
+    world::model_t::initialize();
     font::initialize();
 }
 
-window_t::~window_t() {
+app_t::~app_t() {
     font::finalize();
-    model_t::finalize();
+    world::model_t::finalize();
     glfwTerminate();
 }
 
-bool window_t::should_close() const {
+bool app_t::should_close() const {
     if (glfwWindowShouldClose(m_window) != 0)
         return true;
     return false;
@@ -79,27 +82,27 @@ void update_input(GLFWwindow *window, input_t &input) {
     }
 }
 
-void window_t::update() {
+void app_t::update() {
     update_input(m_window, m_input);
-    m_camera.update(m_input);
+    world.camera.update(m_input);
 }
 
-void window_t::draw() const {
+void app_t::draw() const {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    model_t::before_drawing(m_camera);
+    world::model_t::before_drawing(world.camera);
 
-    for (auto const &model : m_models) {
+    for (auto const &model : world.models) {
         model->draw();
     }
 
     font::before_drawing();
 
-    for (auto const &text : m_2d_texts) {
+    for (auto const &text : ui.texts_2d) {
         text->draw(m_window);
     }
-    glm::mat4 MVP = m_camera.projection() * m_camera.view();
-    for (auto const &text : m_3d_texts) {
+    glm::mat4 MVP = world.camera.projection() * world.camera.view();
+    for (auto const &text : world.texts_3d) {
         text->draw(m_window, MVP);
     }
 

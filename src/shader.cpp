@@ -1,6 +1,6 @@
-#include <fstream>
-#include <protowork.hpp>
-#include <sstream>
+#include <vector>
+#include <stdexcept>
+#include <protowork/util.hpp>
 
 id_t protowork::detail::load_shader_program(const char *vertex_shader,
                                             const char *fragment_shader) {

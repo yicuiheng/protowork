@@ -8,7 +8,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <protowork.hpp>
+#include <protowork/ui/text2d.hpp>
+#include <protowork/world/text3d.hpp>
+#include <protowork/font.hpp>
 
 using namespace protowork;
 
@@ -88,11 +90,11 @@ static void draw_impl(GLFWwindow *window, int x, int y, int font_size,
     glDisableVertexAttribArray(1);
 }
 
-void text2d_t::draw(GLFWwindow *window) const {
+void ui::text2d_t::draw(GLFWwindow *window) const {
     draw_impl(window, x, y, font_size, text);
 }
 
-void text3d_t::draw(GLFWwindow *window, glm::mat4 const &mat) const {
+void world::text3d_t::draw(GLFWwindow *window, glm::mat4 const &mat) const {
     int screen_width, screen_height;
     glfwGetWindowSize(window, &screen_width, &screen_height);
     auto pos = mat * glm::vec4{this->pos, 1.f};

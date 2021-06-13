@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cmath>
 #include <protowork.hpp>
+#include <protowork/world.hpp>
 
 namespace pw = protowork;
 
@@ -13,7 +14,7 @@ pw::pos_t angle_to_pos(float phi, float theta) {
     return pw::pos_t{sin_phi * cos_theta, cos_phi, sin_phi * sin_theta};
 }
 
-struct sphere_object_t : public pw::model_t {
+struct sphere_object_t : public pw::world::model_t {
     explicit sphere_object_t() {
         pw::pos_t top{0.f, 1.f, 0.f};
         constexpr int N_DIVISION = 8;
@@ -79,33 +80,32 @@ private:
 };
 
 int main() {
-    auto window =
-        pw::window_t{pw::window_t::config_t{800, 600, "all test window"}};
+    auto app = pw::app_t{800, 600, "all test window"};
 
     auto sphere = std::make_shared<sphere_object_t>();
-    window.add_model(sphere);
+    app.world.models.push_back(sphere);
 
-    auto text_neko = std::make_shared<pw::text2d_t>(400, 300, 32, "neko");
-    window.add_text_2d(text_neko);
+    auto text_neko = std::make_shared<pw::ui::text2d_t>(400, 300, 32, "neko");
+    app.ui.texts_2d.push_back(text_neko);
 
-    auto text_inu = std::make_shared<pw::text2d_t>(0, 0, 96, "inu");
-    window.add_text_2d(text_inu);
+    auto text_inu = std::make_shared<pw::ui::text2d_t>(0, 0, 96, "inu");
+    app.ui.texts_2d.push_back(text_inu);
 
     auto const &vertices = sphere->vbo_vertex_buffer();
-    std::vector<std::shared_ptr<pw::text3d_t>> text_vertices;
+    std::vector<std::shared_ptr<pw::world::text3d_t>> text_vertices;
     for (int i = 0; i < vertices.size(); i++) {
-        auto t = std::make_shared<pw::text3d_t>(vertices[i], 24,
-                                                "(" + std::to_string(i) + ")");
+        auto t = std::make_shared<pw::world::text3d_t>(
+            vertices[i], 24, "(" + std::to_string(i) + ")");
         text_vertices.push_back(t);
-        window.add_text_3d(t);
+        app.world.texts_3d.push_back(t);
     }
 
-    while (!window.should_close()) {
+    while (!app.should_close()) {
         text_inu->x += 1;
         for (int i = 0; i < vertices.size(); i++) {
             text_vertices[i]->pos = vertices[i];
         }
-        window.update();
-        window.draw();
+        app.update();
+        app.draw();
     }
 }

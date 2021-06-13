@@ -1,10 +1,11 @@
 #include <array>
+#include <vector>
 #include <memory>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include <protowork.hpp>
+#include <protowork/font.hpp>
 
 namespace pw = protowork;
 

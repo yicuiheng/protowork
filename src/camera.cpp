@@ -1,11 +1,11 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include <iostream>
 
-#include <protowork.hpp>
+#include <protowork/world/camera.hpp>
+#include <protowork/input.hpp>
 
-using namespace protowork;
+using namespace protowork::world;
 
 camera_t::camera_t() {}
 

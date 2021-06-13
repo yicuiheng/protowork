@@ -2,8 +2,11 @@
 #include <GLFW/glfw3.h>
 
 #include <protowork.hpp>
+#include <protowork/util.hpp>
+#include <protowork/world/model.hpp>
 
 using namespace protowork;
+using namespace protowork::world;
 
 static const char *vertex_shader_code = R"(
 #version 430 core
