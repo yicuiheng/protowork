@@ -87,43 +87,38 @@ model_t::model_t() {
     glGenVertexArrays(1, &m_vertex_array_id);
     glBindVertexArray(m_vertex_array_id);
 
-    glGenBuffers(1, &m_vbo_vertex_buffer_id);
-    glGenBuffers(1, &m_vbo_normal_buffer_id);
-    glGenBuffers(1, &m_vbo_index_buffer_id);
+    glGenBuffers(1, &m_vertex_buffer_id);
+    glGenBuffers(1, &m_normal_buffer_id);
+    glGenBuffers(1, &m_index_buffer_id);
 }
 
 model_t::~model_t() {
     glDeleteVertexArrays(1, &m_vertex_array_id);
-    glDeleteBuffers(1, &m_vbo_vertex_buffer_id);
-    glDeleteBuffers(1, &m_vbo_normal_buffer_id);
-    glDeleteBuffers(1, &m_vbo_index_buffer_id);
+    glDeleteBuffers(1, &m_vertex_buffer_id);
+    glDeleteBuffers(1, &m_normal_buffer_id);
+    glDeleteBuffers(1, &m_index_buffer_id);
 }
 
 void model_t::draw() const {
-    auto model_matrix = glm::mat4(1.f);
     glUniformMatrix4fv(g_model_matrix_id, 1, GL_FALSE, &model_matrix[0][0]);
 
-    auto const &vertex_buffer = this->vbo_vertex_buffer();
     glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_vertex_buffer_id);
-    glBufferData(GL_ARRAY_BUFFER, vertex_buffer.size() * sizeof(pos_t),
-                 vertex_buffer.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, m_vertex_buffer_id);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(pos_t),
+                 vertices.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    auto const &normal_buffer = this->vbo_normal_buffer();
     glEnableVertexAttribArray(1);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo_normal_buffer_id);
-    glBufferData(GL_ARRAY_BUFFER, normal_buffer.size() * sizeof(pos_t),
-                 normal_buffer.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, m_normal_buffer_id);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(pos_t),
+                 normals.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    auto const &index_buffer = this->vbo_index_buffer();
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_vbo_index_buffer_id);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, index_buffer.size() * sizeof(index_t),
-                 index_buffer.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_index_buffer_id);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(index_t),
+                 indices.data(), GL_STATIC_DRAW);
 
-    glDrawElements(GL_TRIANGLES, index_buffer.size(), GL_UNSIGNED_SHORT,
-                   nullptr);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, nullptr);
 
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);

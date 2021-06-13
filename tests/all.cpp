@@ -18,7 +18,7 @@ struct sphere_object_t : public pw::world::model_t {
     explicit sphere_object_t() {
         pw::pos_t top{0.f, 1.f, 0.f};
         constexpr int N_DIVISION = 8;
-        m_vertices.push_back(top);
+        vertices.push_back(top);
         using row_t = std::vector<std::pair<int, pw::pos_t>>;
         row_t prev_row(N_DIVISION + 1, std::make_pair(0, top));
 
@@ -27,8 +27,8 @@ struct sphere_object_t : public pw::world::model_t {
                 M_PI * static_cast<float>(i) / static_cast<float>(N_DIVISION);
             auto init_pos = angle_to_pos(phi, 0.f);
             auto prev_theta =
-                std::make_pair(static_cast<int>(m_vertices.size()), init_pos);
-            m_vertices.push_back(prev_theta.second);
+                std::make_pair(static_cast<int>(vertices.size()), init_pos);
+            vertices.push_back(prev_theta.second);
 
             row_t current_row;
             current_row.push_back(prev_theta);
@@ -38,23 +38,23 @@ struct sphere_object_t : public pw::world::model_t {
                               static_cast<float>(N_DIVISION);
                 auto current = angle_to_pos(phi, theta);
 
-                int current_id = m_vertices.size();
+                int current_id = vertices.size();
 
                 if (j == N_DIVISION) {
                     current_id -= N_DIVISION;
                 } else {
-                    m_vertices.emplace_back(current);
+                    vertices.emplace_back(current);
                 }
 
                 if (i != 1) {
-                    m_indices.emplace_back(prev_row[j - 1].first);
-                    m_indices.emplace_back(prev_row[j].first);
-                    m_indices.emplace_back(prev_theta.first);
+                    indices.emplace_back(prev_row[j - 1].first);
+                    indices.emplace_back(prev_row[j].first);
+                    indices.emplace_back(prev_theta.first);
                 }
                 if (i != N_DIVISION) {
-                    m_indices.emplace_back(current_id);
-                    m_indices.emplace_back(prev_theta.first);
-                    m_indices.emplace_back(prev_row[j].first);
+                    indices.emplace_back(current_id);
+                    indices.emplace_back(prev_theta.first);
+                    indices.emplace_back(prev_row[j].first);
                 }
 
                 prev_theta = std::make_pair(current_id, current);
@@ -62,21 +62,9 @@ struct sphere_object_t : public pw::world::model_t {
             }
             prev_row = std::move(current_row);
         }
-    }
 
-    std::vector<pw::pos_t> const &vbo_vertex_buffer() const override {
-        return m_vertices;
+        normals = vertices;
     }
-    std::vector<glm::vec3> const &vbo_normal_buffer() const override {
-        return m_vertices;
-    }
-    std::vector<pw::index_t> const &vbo_index_buffer() const override {
-        return m_indices;
-    }
-
-private:
-    std::vector<pw::pos_t> m_vertices;
-    std::vector<pw::index_t> m_indices;
 };
 
 int main() {
@@ -91,7 +79,7 @@ int main() {
     auto text_inu = std::make_shared<pw::ui::text2d_t>(0, 0, 96, "inu");
     app.ui.texts_2d.push_back(text_inu);
 
-    auto const &vertices = sphere->vbo_vertex_buffer();
+    auto const &vertices = sphere->vertices;
     std::vector<std::shared_ptr<pw::world::text3d_t>> text_vertices;
     for (int i = 0; i < vertices.size(); i++) {
         auto t = std::make_shared<pw::world::text3d_t>(
