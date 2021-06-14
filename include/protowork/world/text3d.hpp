@@ -9,7 +9,9 @@ struct GLFWwindow;
 namespace protowork::world {
 
 struct text3d_t {
-    void draw(GLFWwindow *, glm::mat4 const &) const;
+    void append(GLFWwindow *window, glm::mat4 const &,
+                std::vector<glm::vec2> &vertices,
+                std::vector<glm::vec2> &uvs) const;
     pos_t pos;
     int font_size;
     std::string text;

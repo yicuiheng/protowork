@@ -3,15 +3,14 @@
 
 #include <string>
 
-struct GLFWwindow;
-
 namespace protowork::ui {
 
 struct text2d_t {
     int x, y, font_size;
     std::string text;
 
-    void draw(GLFWwindow *) const;
+    void append(std::vector<glm::vec2> &vertices,
+                std::vector<glm::vec2> &uvs) const;
 };
 
 } // namespace protowork::ui

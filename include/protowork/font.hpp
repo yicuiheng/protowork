@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <protowork/util.hpp>
 
+struct GLFWwindow;
+
 namespace protowork::font {
 
 struct key_t {
@@ -33,12 +35,11 @@ void initialize();
 void finalize();
 void before_drawing();
 
-data_t const &get(key_t const &);
+void render(GLFWwindow *window, int font_size,
+            std::vector<glm::vec2> const &vertices,
+            std::vector<glm::vec2> const &uvs);
 
-id_t texture_sampler_id();
-id_t size_id();
-id_t vertex_buffer_id();
-id_t uv_buffer_id();
+data_t const &get(key_t const &);
 
 } // namespace protowork::font
 

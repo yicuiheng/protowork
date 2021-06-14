@@ -97,13 +97,23 @@ void app_t::draw() const {
     }
 
     font::before_drawing();
+    using text_rendering_info_t =
+        std::pair<std::vector<glm::vec2>, std::vector<glm::vec2>>;
+    std::unordered_map<int, text_rendering_info_t> text_rendering_infos;
 
     for (auto const &text : ui.texts_2d) {
-        text->draw(m_window);
+        text_rendering_info_t &info = text_rendering_infos[text->font_size];
+        text->append(info.first, info.second);
     }
     glm::mat4 MVP = world.camera.projection() * world.camera.view();
     for (auto const &text : world.texts_3d) {
-        text->draw(m_window, MVP);
+        text_rendering_info_t &info = text_rendering_infos[text->font_size];
+        text->append(m_window, MVP, info.first, info.second);
+    }
+
+    for (auto const &info : text_rendering_infos) {
+        font::render(m_window, info.first, info.second.first,
+                     info.second.second);
     }
 
     glfwSwapBuffers(m_window);

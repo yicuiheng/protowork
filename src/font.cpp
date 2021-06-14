@@ -5,6 +5,9 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+
 #include <protowork/font.hpp>
 
 namespace pw = protowork;
@@ -122,6 +125,40 @@ void pw::font::finalize() {
 
 void pw::font::before_drawing() { glUseProgram(g_shader_id); }
 
+void pw::font::render(GLFWwindow *window, int font_size,
+                      std::vector<glm::vec2> const &vertices,
+                      std::vector<glm::vec2> const &uvs) {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D,
+                  pw::font::get(font::key_t{font_size}).texture_id);
+    glUniform1i(g_texture_sampler_id, 0);
+
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    glUniform2f(glGetUniformLocation(g_shader_id, "u_Size"), (float)width,
+                (float)height);
+
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, g_vertex_buffer_id);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec2),
+                 vertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, g_uv_buffer_id);
+    glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(glm::vec2), uvs.data(),
+                 GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+    glDisable(GL_BLEND);
+
+    glDisableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+}
+
 pw::font::data_t const &pw::font::get(pw::font::key_t const &key) {
     auto found = g_font_data.find(key);
     if (found == g_font_data.end()) {
@@ -188,8 +225,3 @@ pw::font::data_t const &pw::font::get(pw::font::key_t const &key) {
         return found->second;
     }
 }
-
-id_t pw::font::texture_sampler_id() { return g_texture_sampler_id; }
-id_t pw::font::size_id() { return glGetUniformLocation(g_shader_id, "u_Size"); }
-id_t pw::font::vertex_buffer_id() { return g_vertex_buffer_id; }
-id_t pw::font::uv_buffer_id() { return g_uv_buffer_id; }
