@@ -1,6 +1,8 @@
 #ifndef PROTOWORK_WORLD_CAMERA_HPP
 #define PROTOWORK_WORLD_CAMERA_HPP
 
+#include <glm/gtx/quaternion.hpp>
+
 #include <protowork/util.hpp>
 #include <protowork/input.hpp>
 
@@ -14,7 +16,8 @@ struct camera_t {
 
 private:
     matrix_t m_view;
-    pos_t m_origin_pos = pos_t{0, 0, 5};
+    glm::quat m_orientation;
+    float m_distance = 5.f;
     pos_t m_target_pos = pos_t{0, 0, 0};
 };
 
